@@ -11,9 +11,9 @@ struct MainTabView: View {
                 }
                 .tag(0)
             
-            LivestreamView()
+            StoreView()
                 .tabItem {
-                    Label("Live", systemImage: "tv")
+                    Label("Store", systemImage: "cart")
                 }
                 .tag(1)
             
