@@ -1,8 +1,10 @@
 import SwiftUI
+import Combine
 
 struct HomeView: View {
     // MARK: - Properties
     @StateObject private var viewModel = ArticleViewModel()
+    @StateObject private var liveShowViewModel = LiveShowViewModel()
     @State private var searchText = ""
     @State private var selectedTab = 1
     
@@ -46,15 +48,14 @@ struct HomeView: View {
                     }
                     
                     // Live Show Banner
-                    LiveShowBanner(
-                        title: "Tips para una Dieta Saludable",
-                        startTime: Date().addingTimeInterval(3600),
-                        hostName: "Dr. García",
-                        thumbnailName: "healthy-food",
-                        action: {
-                            selectedTab = 1
-                        }
-                    )
+                    if let liveStream = liveShowViewModel.currentShow {
+                        LiveShowBanner(
+                            liveStream: liveStream,
+                            action: {
+                                selectedTab = 1
+                            }
+                        )
+                    }
                     
                     // Trending Now Section
                     VStack(alignment: .leading) {
@@ -104,6 +105,7 @@ struct HomeView: View {
             }
             .onAppear {
                 viewModel.fetchArticles()
+                liveShowViewModel.fetchShowBySlug("cosmedbeauty-desember2024")
             }
         }
     }
