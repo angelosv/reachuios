@@ -4,6 +4,7 @@ struct HomeView: View {
     // MARK: - Properties
     @StateObject private var viewModel = ArticleViewModel()
     @State private var searchText = ""
+    @State private var selectedTab = 1
     
     // MARK: - Body
     var body: some View {
@@ -43,6 +44,17 @@ struct HomeView: View {
                             .padding(.horizontal)
                         }
                     }
+                    
+                    // Live Show Banner
+                    LiveShowBanner(
+                        title: "Tips para una Dieta Saludable",
+                        startTime: Date().addingTimeInterval(3600),
+                        hostName: "Dr. García",
+                        thumbnailName: "healthy-food",
+                        action: {
+                            selectedTab = 1
+                        }
+                    )
                     
                     // Trending Now Section
                     VStack(alignment: .leading) {
