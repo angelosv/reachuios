@@ -2,8 +2,6 @@ import Foundation
 import Combine
 
 class StoreViewModel: ObservableObject {
-    @Published var featuredProducts: [Product] = []
-    @Published var products: [Product] = []
     @Published var reachuProducts: [ReachuProduct] = []
     @Published var categories: [ProductCategory] = ProductCategory.allCases
     @Published var selectedCategory: ProductCategory?
@@ -15,13 +13,8 @@ class StoreViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
-        // Cargamos datos de muestra como fallback inicial
-        loadSampleData()
-    }
-    
-    private func loadSampleData() {
-        self.featuredProducts = Product.sampleFeaturedProducts
-        self.products = Product.sampleProducts
+        // Cargar productos de Reachu al inicializar
+        fetchProducts()
     }
     
     func fetchProducts() {
@@ -42,36 +35,19 @@ class StoreViewModel: ObservableObject {
                 case .failure(let error):
                     print("❌ Error fetching products: \(error.localizedDescription)")
                     self.errorMessage = "Failed to load products: \(error.localizedDescription)"
-                    
-                    // Use sample data as fallback
-                    self.loadSampleData()
                 }
             }, receiveValue: { [weak self] reachuProducts in
                 guard let self = self else { return }
                 
                 print("✅ Successfully loaded \(reachuProducts.count) products from Reachu API")
                 self.reachuProducts = reachuProducts
-                
-                // Si no hay productos, usar los de muestra como fallback
-                if reachuProducts.isEmpty {
-                    self.loadSampleData()
-                }
             })
             .store(in: &cancellables)
     }
     
     func filterByCategory(_ category: ProductCategory?) {
         self.selectedCategory = category
-        if let category = category {
-            self.products = Product.sampleProducts.filter { $0.category == category }
-        } else {
-            self.products = Product.sampleProducts
-        }
-    }
-    
-    func addToCart(_ product: Product) {
-        // In a real app, this would manage a cart
-        cartItemCount += 1
+        // Implementar filtrado por categoría para productos de Reachu si es necesario
     }
     
     func addReachuProductToCart(_ product: ReachuProduct) {

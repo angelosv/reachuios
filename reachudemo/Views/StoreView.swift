@@ -3,20 +3,16 @@ import SwiftUI
 struct StoreView: View {
     @StateObject private var viewModel = StoreViewModel()
     @State private var searchText = ""
-    @State private var showingReachuProducts: Bool = true
+    @State private var selectedProduct: ReachuProduct? = nil
+    @State private var showProductDetail = false
+    
+    // Color principal de la aplicación
+    let primaryColor = Color(hex: "#7300f9")
     
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    // Selector entre productos de muestra y Reachu
-                    Picker("Fuente de productos", selection: $showingReachuProducts) {
-                        Text("Productos de Reachu").tag(true)
-                        Text("Productos de muestra").tag(false)
-                    }
-                    .pickerStyle(SegmentedPickerStyle())
-                    .padding(.horizontal)
-                    
                     if viewModel.isLoading {
                         VStack {
                             ProgressView()
@@ -31,102 +27,44 @@ struct StoreView: View {
                         VStack {
                             Image(systemName: "exclamationmark.triangle")
                                 .font(.largeTitle)
-                                .foregroundColor(.red)
+                                .foregroundColor(primaryColor)
                             Text(errorMessage)
                                 .font(.caption)
                                 .multilineTextAlignment(.center)
                                 .padding()
                         }
                         .frame(maxWidth: .infinity, minHeight: 200)
-                    } else if showingReachuProducts {
-                        // Productos de Reachu
-                        if viewModel.reachuProducts.isEmpty {
-                            VStack {
-                                Image(systemName: "tray")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
-                                Text("No se encontraron productos de Reachu")
-                                    .font(.headline)
-                                    .padding(.top, 8)
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 200)
-                        } else {
-                            // Grid de productos de Reachu
-                            VStack(alignment: .leading) {
-                                Text("PRODUCTOS DE REACHU")
-                                    .font(.headline)
-                                    .fontWeight(.bold)
-                                    .padding(.horizontal)
-                                
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible(), spacing: 16),
-                                    GridItem(.flexible(), spacing: 16)
-                                ], spacing: 16) {
-                                    ForEach(viewModel.reachuProducts) { product in
-                                        ReachuProductCard(product: product) {
-                                            viewModel.addReachuProductToCart(product)
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
+                    } else if viewModel.reachuProducts.isEmpty {
+                        VStack {
+                            Image(systemName: "tray")
+                                .font(.largeTitle)
+                                .foregroundColor(.gray)
+                            Text("No se encontraron productos")
+                                .font(.headline)
+                                .padding(.top, 8)
                         }
+                        .frame(maxWidth: .infinity, minHeight: 200)
                     } else {
-                        // Productos de muestra
-                        // Featured Products
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                ForEach(viewModel.featuredProducts) { product in
-                                    FeaturedProductCard(product: product) {
-                                        viewModel.addToCart(product)
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Categories
+                        // Grid de productos de Reachu
                         VStack(alignment: .leading) {
-                            HStack {
-                                Text("CATEGORIES")
-                                    .font(.headline)
-                                    .fontWeight(.bold)
-                                
-                                Spacer()
-                                
-                                Button(action: {
-                                    viewModel.filterByCategory(nil)
-                                }) {
-                                    Text("See All")
-                                        .foregroundColor(.red)
+                            Text("PRODUCTOS")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .padding(.horizontal)
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.flexible(), spacing: 16),
+                                GridItem(.flexible(), spacing: 16)
+                            ], spacing: 16) {
+                                ForEach(viewModel.reachuProducts) { product in
+                                    ReachuProductCard(product: product) {
+                                        selectedProduct = product
+                                        showProductDetail = true
+                                    }
                                 }
                             }
                             .padding(.horizontal)
-                            
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 15) {
-                                    ForEach(viewModel.categories) { category in
-                                        StoreCategoryCard(category: category)
-                                            .onTapGesture {
-                                                viewModel.filterByCategory(category)
-                                            }
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
                         }
-                        
-                        // Products Grid
-                        LazyVGrid(columns: [
-                            GridItem(.flexible(), spacing: 16),
-                            GridItem(.flexible(), spacing: 16)
-                        ], spacing: 16) {
-                            ForEach(viewModel.products) { product in
-                                ProductCard(product: product) {
-                                    viewModel.addToCart(product)
-                                }
-                            }
-                        }
-                        .padding(.horizontal)
                     }
                 }
                 .padding(.vertical)
@@ -143,24 +81,38 @@ struct StoreView: View {
                     Button(action: {}) {
                         ZStack(alignment: .topTrailing) {
                             Image(systemName: "cart")
-                                .foregroundColor(.red)
+                                .foregroundColor(primaryColor)
                             
                             if viewModel.cartItemCount > 0 {
                                 Text("\(viewModel.cartItemCount)")
                                     .font(.caption2)
                                     .foregroundColor(.white)
                                     .padding(4)
-                                    .background(Color.red)
+                                    .background(primaryColor)
                                     .clipShape(Circle())
                                     .offset(x: 10, y: -10)
                             }
                         }
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {}) {
+                        Image(systemName: "magnifyingglass")
+                            .foregroundColor(primaryColor)
+                    }
+                }
             }
-            .searchable(text: $searchText)
-            .onAppear {
-                viewModel.fetchProducts()
+        }
+        .sheet(isPresented: $showProductDetail) {
+            if let product = selectedProduct {
+                ProductDetailModal(
+                    product: product,
+                    isPresented: $showProductDetail,
+                    onAddToCart: { product in
+                        viewModel.addReachuProductToCart(product)
+                    }
+                )
             }
         }
     }

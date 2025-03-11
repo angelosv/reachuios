@@ -71,6 +71,9 @@ struct RemoteImage: View {
     @StateObject private var loader: Loader
     var placeholder: AnyView
     
+    // Color primario de la aplicación
+    let primaryColor = Color(hex: "#7300f9")
+    
     init(url: URL, @ViewBuilder placeholder: @escaping () -> some View) {
         self._loader = StateObject(wrappedValue: Loader(url: url))
         self.placeholder = AnyView(placeholder())
@@ -97,7 +100,7 @@ struct RemoteImage: View {
                     .font(.caption)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 16)
-                    .background(Color.blue)
+                    .background(primaryColor)
                     .foregroundColor(.white)
                     .cornerRadius(8)
                     .padding(.top, 8)
