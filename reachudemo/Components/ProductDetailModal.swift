@@ -116,8 +116,8 @@ struct ProductDetailModal: View {
                             .font(.caption)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.red.opacity(0.2))
-                            .foregroundColor(.red)
+                            .background(primaryColor.opacity(0.2))
+                            .foregroundColor(primaryColor)
                             .cornerRadius(4)
                     }
                 }
@@ -250,11 +250,14 @@ struct ProductDetailModal: View {
                     Text("Add to Cart")
                         .font(.headline)
                         .fontWeight(.medium)
-                        .foregroundColor(.white)
+                        .foregroundColor(selectedSize != nil && selectedColor != nil ? primaryColor : Color.gray)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(selectedSize != nil && selectedColor != nil ? primaryColor : Color.gray)
-                        .cornerRadius(8)
+                        .background(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(selectedSize != nil && selectedColor != nil ? primaryColor : Color.gray, lineWidth: 1.5)
+                        )
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)

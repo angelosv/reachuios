@@ -52,13 +52,13 @@ struct VideoPlayerView: View {
                         .frame(width: 100, height: 100)
                         .foregroundColor(.gray)
                     
-                    Text("Cargando video...")
+                    Text("Loading video...")
                         .foregroundColor(.white)
                         .padding()
                     
                     if !errorMessage.isEmpty {
                         Text(errorMessage)
-                            .foregroundColor(.red)
+                            .foregroundColor(Color(hex: "#7300f9"))
                             .font(.caption)
                             .padding()
                     }
@@ -173,7 +173,7 @@ struct VideoPlayerView: View {
             if let error = error {
                 print("❌ Error en la petición: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    self.errorMessage = "Error de red: \(error.localizedDescription)"
+                    self.errorMessage = "Network error: \(error.localizedDescription)"
                 }
                 return
             }
@@ -183,9 +183,9 @@ struct VideoPlayerView: View {
             }
             
             guard let data = data else {
-                print("❌ No se recibieron datos")
+                print("❌ No data received")
                 DispatchQueue.main.async {
-                    self.errorMessage = "No se recibieron datos"
+                    self.errorMessage = "No data received"
                 }
                 return
             }
@@ -289,7 +289,7 @@ struct WebViewVideoPlayer: UIViewRepresentable {
                 <div class="video-container">
                     <video controls autoplay playsinline>
                         <source src="\(videoURL.absoluteString)" type="video/mp4">
-                        Tu navegador no soporta la etiqueta de video.
+                        Your browser does not support the video tag.
                     </video>
                 </div>
             </body>
@@ -345,12 +345,12 @@ struct VideoProductCard: View {
                 .foregroundColor(.white)
             
             Button(action: {}) {
-                Text("Añadir")
+                Text("Add")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 15)
                     .padding(.vertical, 8)
-                    .background(Color.red)
+                    .background(Color(hex: "#7300f9"))
                     .cornerRadius(20)
             }
         }

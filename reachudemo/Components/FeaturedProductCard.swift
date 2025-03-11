@@ -4,10 +4,13 @@ struct FeaturedProductCard: View {
     let product: Product
     let action: () -> Void
     
+    // Main app color
+    let primaryColor = Color(hex: "#7300f9")
+    
     var body: some View {
         Button(action: action) {
             ZStack(alignment: .bottomLeading) {
-                // Imagen de fondo
+                // Background image
                 Image(product.imageName)
                     .resizable()
                     .aspectRatio(16/9, contentMode: .fill)
@@ -22,7 +25,7 @@ struct FeaturedProductCard: View {
                     )
                     .cornerRadius(12)
                 
-                // Contenido superpuesto
+                // Overlay content
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text("FEATURED")
@@ -31,7 +34,7 @@ struct FeaturedProductCard: View {
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.red)
+                            .background(primaryColor)
                             .cornerRadius(4)
                         
                         Spacer()
@@ -86,6 +89,20 @@ struct FeaturedProductCard: View {
             }
         }
         .padding(.horizontal)
+    }
+}
+
+// Extension for default stock images if needed
+extension String {
+    static func stockImageURL(for index: Int) -> String {
+        let stockImages = [
+            "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?q=80&w=2940&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?q=80&w=3098&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1560769629-975ec94e6a86?q=80&w=3164&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1560343090-f0409e92791a?q=80&w=3164&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1542272604-787c3835535d?q=80&w=3026&auto=format&fit=crop"
+        ]
+        return stockImages[index % stockImages.count]
     }
 }
 

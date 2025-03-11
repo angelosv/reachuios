@@ -64,14 +64,17 @@ struct ReachuProductCard: View {
                     
                     Spacer()
                     
-                    // Cart icon button on the right
+                    // Cart icon button on the right (now outlined style)
                     Button(action: onAddToCart) {
                         Image(systemName: "cart.fill.badge.plus")
                             .font(.headline)
-                            .foregroundColor(.white)
+                            .foregroundColor(primaryColor)
                             .padding(8)
-                            .background(primaryColor)
-                            .cornerRadius(8)
+                            .background(Color.clear)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(primaryColor, lineWidth: 1.5)
+                            )
                     }
                 }
             }

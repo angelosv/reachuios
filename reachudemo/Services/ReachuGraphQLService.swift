@@ -31,6 +31,19 @@ struct ReachuProduct: Codable, Identifiable {
     }
     
     var formattedPrice: String {
+        // Intentar convertir el monto a Double para formatear correctamente
+        if let amountDouble = Double(price.amount) {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.currencyCode = price.currency_code
+            formatter.maximumFractionDigits = 0
+            
+            if let formattedAmount = formatter.string(from: NSNumber(value: amountDouble)) {
+                return formattedAmount
+            }
+        }
+        
+        // Fallback al formato básico si no se puede convertir
         return "\(price.currency_code) \(price.amount)"
     }
     

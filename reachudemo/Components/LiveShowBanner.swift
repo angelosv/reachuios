@@ -4,10 +4,13 @@ struct LiveShowBanner: View {
     let liveStream: LiveStream
     let action: () -> Void
     
+    // Main app color
+    let primaryColor = Color(hex: "#7300f9")
+    
     var body: some View {
         Button(action: action) {
             HStack(spacing: 15) {
-                // Imagen a la izquierda
+                // Image on the left
                 AsyncImage(url: URL(string: liveStream.thumbnail)) { phase in
                     switch phase {
                     case .empty:
@@ -40,7 +43,7 @@ struct LiveShowBanner: View {
                     VStack {
                         HStack {
                             Image(systemName: "dot.radiowaves.left.and.right")
-                                .foregroundColor(.red)
+                                .foregroundColor(primaryColor)
                             Text("LIVE")
                                 .font(.caption2)
                                 .fontWeight(.bold)
@@ -57,12 +60,12 @@ struct LiveShowBanner: View {
                     alignment: .topLeading
                 )
                 
-                // Contenido a la derecha
+                // Content on the right
                 VStack(alignment: .leading, spacing: 4) {
                     Text("COMING LIVE SOON")
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(.red)
+                        .foregroundColor(primaryColor)
                     
                     Text(liveStream.title)
                         .font(.subheadline)

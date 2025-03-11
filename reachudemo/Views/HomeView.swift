@@ -9,6 +9,9 @@ struct HomeView: View {
     @State private var selectedTab = 1
     @State private var showVideoPlayer = false
     
+    // Main app color
+    let primaryColor = Color(hex: "#7300f9")
+    
     // MARK: - Body
     var body: some View {
         NavigationView {
@@ -30,7 +33,7 @@ struct HomeView: View {
                                 // Action for See All
                             }) {
                                 Text("See All")
-                                    .foregroundColor(.red)
+                                    .foregroundColor(primaryColor)
                             }
                         }
                         .padding(.horizontal)
@@ -71,7 +74,7 @@ struct HomeView: View {
                                 // Action for See All
                             }) {
                                 Text("See All")
-                                    .foregroundColor(.red)
+                                    .foregroundColor(primaryColor)
                             }
                         }
                         .padding(.horizontal)
@@ -89,7 +92,7 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    Text("Eksplor")
+                    Text("StyleLife")
                         .font(.title2)
                         .fontWeight(.bold)
                         .foregroundColor(.black)
@@ -100,7 +103,7 @@ struct HomeView: View {
                         // Search action
                     }) {
                         Image(systemName: "magnifyingglass")
-                            .foregroundColor(.red)
+                            .foregroundColor(primaryColor)
                     }
                 }
             }
