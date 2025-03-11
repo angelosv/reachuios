@@ -1,23 +1,57 @@
 import SwiftUI
 
+// Class to store selections by product ID
+class ProductSelections {
+    static private var selectedSizeMap: [String: String] = [:]
+    static private var selectedColorMap: [String: String] = [:]
+    static private var quantityMap: [String: Int] = [:]
+    
+    static func getSelectedSize(for productId: String) -> String? {
+        return selectedSizeMap[productId]
+    }
+    
+    static func setSelectedSize(for productId: String, size: String?) {
+        selectedSizeMap[productId] = size
+    }
+    
+    static func getSelectedColor(for productId: String) -> String? {
+        return selectedColorMap[productId]
+    }
+    
+    static func setSelectedColor(for productId: String, color: String?) {
+        selectedColorMap[productId] = color
+    }
+    
+    static func getQuantity(for productId: String) -> Int {
+        return quantityMap[productId] ?? 1
+    }
+    
+    static func setQuantity(for productId: String, quantity: Int) {
+        quantityMap[productId] = quantity
+    }
+}
+
 struct ProductDetailModal: View {
     let product: ReachuProduct
     @Binding var isPresented: Bool
     @State private var selectedSize: String?
     @State private var selectedColor: String?
     @State private var quantity: Int = 1
-    let onAddToCart: (ReachuProduct) -> Void
+    let onAddToCart: (ReachuProduct, String?, String?, Int) -> Void
     
-    // Tamaños posibles
+    // Main app color
+    let primaryColor = Color(hex: "#7300f9")
+    
+    // Possible sizes
     let sizes = ["S", "M", "L", "XL"]
     
-    // Colores posibles (estos son ejemplos, se podría adaptar para usar los colores reales del producto)
+    // Possible colors
     let colors = ["Broken White", "Charcoal Black", "Jade Green"]
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // Sección de imagen del producto con numeración
+                // Product image section with pagination
                 ZStack(alignment: .bottom) {
                     if let imageURL = product.mainImageURL {
                         RemoteImage(url: imageURL) {
@@ -34,7 +68,7 @@ struct ProductDetailModal: View {
                         .clipped()
                     }
                     
-                    // Indicador de página
+                    // Page indicator
                     HStack {
                         Text("1")
                             .padding(.horizontal, 8)
@@ -54,7 +88,7 @@ struct ProductDetailModal: View {
                     .padding(.bottom, 12)
                 }
                 
-                // Categoría y título
+                // Category and title
                 VStack(alignment: .leading, spacing: 8) {
                     Text("EXECUTIVELY")
                         .font(.caption)
@@ -64,14 +98,14 @@ struct ProductDetailModal: View {
                         .font(.title2)
                         .fontWeight(.bold)
                     
-                    // Precio con descuento
+                    // Price with discount
                     HStack(alignment: .center, spacing: 12) {
                         Text(product.formattedPrice)
                             .font(.title3)
                             .fontWeight(.bold)
-                            .foregroundColor(Color(hex: "#7300f9"))
+                            .foregroundColor(primaryColor)
                         
-                        // Precio original tachado (simulado)
+                        // Original price (simulated)
                         let originalPrice = (Double(product.price.amount) ?? 0) * 1.25
                         Text("\(product.price.currency_code) \(String(format: "%.0f", originalPrice))")
                             .font(.subheadline)
@@ -89,7 +123,7 @@ struct ProductDetailModal: View {
                 }
                 .padding(.horizontal)
                 
-                // Selector de tamaño
+                // Size selector
                 VStack(alignment: .leading, spacing: 12) {
                     Text("SIZE")
                         .font(.subheadline)
@@ -99,10 +133,13 @@ struct ProductDetailModal: View {
                         ForEach(sizes, id: \.self) { size in
                             Button(action: {
                                 selectedSize = size
+                                // Save selection using helper class
+                                ProductSelections.setSelectedSize(for: product.id, size: size)
+                                print("Size selected: \(size)")
                             }) {
                                 Text(size)
                                     .frame(width: 40, height: 40)
-                                    .background(selectedSize == size ? Color(hex: "#7300f9") : Color.gray.opacity(0.1))
+                                    .background(selectedSize == size ? primaryColor : Color.gray.opacity(0.1))
                                     .foregroundColor(selectedSize == size ? .white : .black)
                                     .cornerRadius(4)
                             }
@@ -111,7 +148,7 @@ struct ProductDetailModal: View {
                 }
                 .padding(.horizontal)
                 
-                // Selector de color
+                // Color selector
                 VStack(alignment: .leading, spacing: 12) {
                     Text("COLOR")
                         .font(.subheadline)
@@ -121,11 +158,14 @@ struct ProductDetailModal: View {
                         ForEach(colors, id: \.self) { color in
                             Button(action: {
                                 selectedColor = color
+                                // Save selection using helper class
+                                ProductSelections.setSelectedColor(for: product.id, color: color)
+                                print("Color selected: \(color)")
                             }) {
                                 Text(color)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 8)
-                                    .background(selectedColor == color ? Color(hex: "#7300f9") : Color.gray.opacity(0.1))
+                                    .background(selectedColor == color ? primaryColor : Color.gray.opacity(0.1))
                                     .foregroundColor(selectedColor == color ? .white : .black)
                                     .cornerRadius(4)
                             }
@@ -134,7 +174,7 @@ struct ProductDetailModal: View {
                 }
                 .padding(.horizontal)
                 
-                // Selector de cantidad
+                // Quantity selector
                 VStack(alignment: .leading, spacing: 12) {
                     Text("QUANTITY")
                         .font(.subheadline)
@@ -144,6 +184,9 @@ struct ProductDetailModal: View {
                         Button(action: {
                             if quantity > 1 {
                                 quantity -= 1
+                                // Save quantity using helper class
+                                ProductSelections.setQuantity(for: product.id, quantity: quantity)
+                                print("Quantity decreased: \(quantity)")
                             }
                         }) {
                             Image(systemName: "minus")
@@ -160,6 +203,9 @@ struct ProductDetailModal: View {
                         
                         Button(action: {
                             quantity += 1
+                            // Save quantity using helper class
+                            ProductSelections.setQuantity(for: product.id, quantity: quantity)
+                            print("Quantity increased: \(quantity)")
                         }) {
                             Image(systemName: "plus")
                                 .frame(width: 30, height: 30)
@@ -171,7 +217,7 @@ struct ProductDetailModal: View {
                 }
                 .padding(.horizontal)
                 
-                // Descripción del producto
+                // Product description
                 VStack(alignment: .leading, spacing: 12) {
                     Text("PRODUCT DESCRIPTION")
                         .font(.subheadline)
@@ -185,16 +231,20 @@ struct ProductDetailModal: View {
                     Button(action: {}) {
                         Text("Read more")
                             .font(.caption)
-                            .foregroundColor(Color(hex: "#7300f9"))
+                            .foregroundColor(primaryColor)
                     }
                 }
                 .padding(.horizontal)
                 
                 Spacer()
                 
-                // Botón de añadir al carrito
+                // Add to cart button
                 Button(action: {
-                    onAddToCart(product)
+                    // Debug log
+                    print("Add to Cart pressed - Size: \(selectedSize ?? "nil"), Color: \(selectedColor ?? "nil"), Quantity: \(quantity)")
+                    
+                    // Directly call the callback with current values
+                    onAddToCart(product, selectedSize, selectedColor, quantity)
                     isPresented = false
                 }) {
                     Text("Add to Cart")
@@ -203,12 +253,23 @@ struct ProductDetailModal: View {
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
-                        .background(Color(hex: "#7300f9"))
+                        .background(selectedSize != nil && selectedColor != nil ? primaryColor : Color.gray)
                         .cornerRadius(8)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 16)
+                .disabled(selectedSize == nil || selectedColor == nil)
             }
+        }
+        .onAppear {
+            // Initialize with previous selections if they exist
+            selectedSize = ProductSelections.getSelectedSize(for: product.id) ?? "M"  // Default to M size
+            selectedColor = ProductSelections.getSelectedColor(for: product.id) ?? "Broken White" // Default color
+            quantity = ProductSelections.getQuantity(for: product.id)
+            
+            // Debug log on start
+            print("ProductDetailModal onAppear - Product ID: \(product.id), Title: \(product.title)")
+            print("Initial selections - Size: \(selectedSize ?? "nil"), Color: \(selectedColor ?? "nil"), Quantity: \(quantity)")
         }
         .overlay(
             Button(action: {

@@ -3,6 +3,9 @@ import SwiftUI
 struct MainTabView: View {
     @State private var selectedTab = 0
     
+    // Main app color
+    let primaryColor = Color(hex: "#7300f9")
+    
     var body: some View {
         TabView(selection: $selectedTab) {
             HomeView()
@@ -23,7 +26,7 @@ struct MainTabView: View {
                 }
                 .tag(2)
         }
-        .accentColor(.red)
+        .accentColor(primaryColor)
     }
 }
 

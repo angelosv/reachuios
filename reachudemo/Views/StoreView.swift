@@ -5,8 +5,11 @@ struct StoreView: View {
     @State private var searchText = ""
     @State private var selectedProduct: ReachuProduct? = nil
     @State private var showProductDetail = false
+    @State private var showShoppingCart = false
+    @State private var showingAddedAlert = false
+    @State private var lastAddedProduct: String = ""
     
-    // Color principal de la aplicación
+    // Main app color
     let primaryColor = Color(hex: "#7300f9")
     
     var body: some View {
@@ -18,7 +21,7 @@ struct StoreView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                                 .scaleEffect(1.5)
-                            Text("Cargando productos...")
+                            Text("Loading products...")
                                 .font(.caption)
                                 .padding(.top, 8)
                         }
@@ -39,15 +42,15 @@ struct StoreView: View {
                             Image(systemName: "tray")
                                 .font(.largeTitle)
                                 .foregroundColor(.gray)
-                            Text("No se encontraron productos")
+                            Text("No products found")
                                 .font(.headline)
                                 .padding(.top, 8)
                         }
                         .frame(maxWidth: .infinity, minHeight: 200)
                     } else {
-                        // Grid de productos de Reachu
+                        // Grid of Reachu products
                         VStack(alignment: .leading) {
-                            Text("PRODUCTOS")
+                            Text("PRODUCTS")
                                 .font(.headline)
                                 .fontWeight(.bold)
                                 .padding(.horizontal)
@@ -57,10 +60,19 @@ struct StoreView: View {
                                 GridItem(.flexible(), spacing: 16)
                             ], spacing: 16) {
                                 ForEach(viewModel.reachuProducts) { product in
-                                    ReachuProductCard(product: product) {
-                                        selectedProduct = product
-                                        showProductDetail = true
-                                    }
+                                    ReachuProductCard(
+                                        product: product,
+                                        onTap: {
+                                            // When tapped, show details
+                                            selectedProduct = product
+                                            showProductDetail = true
+                                        },
+                                        onAddToCart: {
+                                            // When Add to Cart pressed, add directly
+                                            // Add default size and color for testing
+                                            addToCart(product: product, size: "M", color: "Broken White", quantity: 1)
+                                        }
+                                    )
                                 }
                             }
                             .padding(.horizontal)
@@ -78,7 +90,9 @@ struct StoreView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {}) {
+                    Button(action: {
+                        showShoppingCart = true
+                    }) {
                         ZStack(alignment: .topTrailing) {
                             Image(systemName: "cart")
                                 .foregroundColor(primaryColor)
@@ -109,12 +123,43 @@ struct StoreView: View {
                 ProductDetailModal(
                     product: product,
                     isPresented: $showProductDetail,
-                    onAddToCart: { product in
-                        viewModel.addReachuProductToCart(product)
+                    onAddToCart: { product, size, color, quantity in
+                        addToCart(product: product, size: size, color: color, quantity: quantity)
                     }
                 )
             }
         }
+        .sheet(isPresented: $showShoppingCart) {
+            ShoppingCartView(viewModel: viewModel)
+        }
+        .alert(isPresented: $showingAddedAlert) {
+            Alert(
+                title: Text("Product Added"),
+                message: Text("\(lastAddedProduct) has been added to your cart."),
+                dismissButton: .default(Text("OK"))
+            )
+        }
+    }
+    
+    // Centralized function to add products to cart
+    private func addToCart(product: ReachuProduct, size: String?, color: String?, quantity: Int) {
+        print("Adding to cart: \(product.title), Size: \(size ?? "N/A"), Color: \(color ?? "N/A"), Quantity: \(quantity)")
+        
+        // Create a new cart item
+        let newItem = CartItem(
+            product: product,
+            quantity: quantity,
+            isSelected: true,
+            size: size,
+            color: color
+        )
+        
+        // Add the item to the cart
+        viewModel.cartItems.append(newItem)
+        
+        // Update the message and show the alert
+        lastAddedProduct = product.title.toTitleCase()
+        showingAddedAlert = true
     }
 }
 
@@ -122,21 +167,24 @@ struct ProductCard: View {
     let product: Product
     let action: () -> Void
     
+    // Main app color
+    let primaryColor = Color(hex: "#7300f9")
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
             // Image
             Image(product.imageName)
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(height: 150)
                 .clipped()
-                .cornerRadius(12)
             
             // Content
             VStack(alignment: .leading, spacing: 4) {
                 Text(product.name)
                     .font(.headline)
                     .lineLimit(2)
+                    .frame(height: 50) // Fixed height for title
                 
                 Text(product.description)
                     .font(.caption)
@@ -144,38 +192,31 @@ struct ProductCard: View {
                     .lineLimit(2)
                 
                 HStack {
-                    // Rating
-                    HStack(spacing: 2) {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
-                        Text(String(format: "%.1f", product.rating))
-                    }
-                    .font(.caption)
-                    
-                    Spacer()
-                    
-                    // Price
+                    // Price left
                     Text(product.formattedPrice)
                         .font(.subheadline)
                         .fontWeight(.bold)
-                }
-                
-                Button(action: action) {
-                    Text("Add to Cart")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                        .background(Color.red)
-                        .cornerRadius(8)
+                        .foregroundColor(primaryColor)
+                    
+                    Spacer()
+                    
+                    // Icon button right
+                    Button(action: action) {
+                        Image(systemName: "cart.fill.badge.plus")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(primaryColor)
+                            .cornerRadius(8)
+                    }
                 }
             }
+            .padding(12)
         }
-        .padding(12)
         .background(Color(UIColor.systemBackground))
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
