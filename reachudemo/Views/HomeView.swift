@@ -7,6 +7,7 @@ struct HomeView: View {
     @StateObject private var liveShowViewModel = LiveShowViewModel()
     @State private var searchText = ""
     @State private var selectedTab = 1
+    @State private var showVideoPlayer = false
     
     // MARK: - Body
     var body: some View {
@@ -52,7 +53,7 @@ struct HomeView: View {
                         LiveShowBanner(
                             liveStream: liveStream,
                             action: {
-                                selectedTab = 1
+                                showVideoPlayer = true
                             }
                         )
                     }
@@ -106,6 +107,9 @@ struct HomeView: View {
             .onAppear {
                 viewModel.fetchArticles()
                 liveShowViewModel.fetchShowBySlug("cosmedbeauty-desember2024")
+            }
+            .fullScreenCover(isPresented: $showVideoPlayer) {
+                VideoPlayerView(videoId: "cosmedbeauty-desember2024")
             }
         }
     }
