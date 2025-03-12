@@ -115,7 +115,6 @@ struct LiveShowBanner: View {
                 .padding(10)
                 .background(colorScheme == .dark ? Color.black.opacity(0.6) : Color.white)
                 .cornerRadius(12)
-                .shadow(color: colorScheme == .dark ? Color.purple.opacity(0.3) : Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(colorScheme == .dark ? Color.purple.opacity(0.3) : Color.clear, lineWidth: 1)
@@ -147,7 +146,6 @@ struct LiveShowBanner: View {
                                     .padding(12)
                                     .background(primaryColor)
                                     .clipShape(Circle())
-                                    .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
                             }
                             .padding(.leading, -10)
                             
@@ -160,7 +158,6 @@ struct LiveShowBanner: View {
                                     .padding(12)
                                     .background(primaryColor)
                                     .clipShape(Circle())
-                                    .shadow(color: Color.black.opacity(0.2), radius: 2, x: 0, y: 1)
                             }
                             .padding(.trailing, -10)
                         }

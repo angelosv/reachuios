@@ -82,7 +82,6 @@ struct LiveShowProductCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(colorScheme == .dark ? Color.black.opacity(0.6) : Color.white)
         .cornerRadius(16)
-        .shadow(color: colorScheme == .dark ? Color.purple.opacity(0.3) : Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(colorScheme == .dark ? Color.purple.opacity(0.3) : Color.clear, lineWidth: 1)

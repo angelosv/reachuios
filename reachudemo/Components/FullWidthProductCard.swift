@@ -99,7 +99,6 @@ struct FullWidthProductCard: View {
             .padding(16)
             .background(colorScheme == .dark ? Color.black.opacity(0.6) : Color.white)
             .cornerRadius(16)
-            .shadow(color: colorScheme == .dark ? Color.purple.opacity(0.3) : Color.black.opacity(0.1), radius: 6, x: 0, y: 3)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(colorScheme == .dark ? Color.purple.opacity(0.3) : Color.clear, lineWidth: 1)

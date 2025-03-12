@@ -284,7 +284,6 @@ struct ProductDetailModal: View {
                     .padding(8)
                     .background(Color.white.opacity(0.8))
                     .clipShape(Circle())
-                    .shadow(color: Color.black.opacity(0.1), radius: 3, x: 0, y: 2)
             }
             .padding(.top, 16)
             .padding(.trailing, 16),

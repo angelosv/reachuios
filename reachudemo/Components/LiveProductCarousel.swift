@@ -19,7 +19,7 @@ struct LiveProductCarousel: View {
                                 .onTapGesture {
                                     onProductTap(products[index])
                                 }
-                                .padding(.bottom, 30)
+                                .padding(.bottom, 20)
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -32,7 +32,7 @@ struct LiveProductCarousel: View {
                                 .frame(width: 8, height: 8)
                         }
                     }
-                    .padding(.bottom, 16)
+                    .padding(.bottom, 4)
                 }
                 .frame(height: 160)
                 .background(Color.clear) // Carrusel con fondo transparente
@@ -122,7 +122,6 @@ struct LiveProductCarousel: View {
             .padding(12)
             .background(Color.white) // Mantener fondo blanco para el producto
             .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.2), radius: 3, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
         .frame(width: width)

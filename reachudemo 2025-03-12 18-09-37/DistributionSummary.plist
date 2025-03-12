@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>reachudemo.ipa</key>
+	<array>
+		<dict>
+			<key>architectures</key>
+			<array>
+				<string>arm64</string>
+			</array>
+			<key>buildNumber</key>
+			<string>1</string>
+			<key>certificate</key>
+			<dict>
+				<key>SHA1</key>
+				<string>46C94D5A53B127D54F5CE790F7ACB0E87180CB3B</string>
+				<key>dateExpires</key>
+				<string>12/03/2026</string>
+				<key>type</key>
+				<string>Cloud Managed Apple Distribution</string>
+			</dict>
+			<key>entitlements</key>
+			<dict>
+				<key>application-identifier</key>
+				<string>U4R2B2U7E6.reachudev.reachudemo</string>
+				<key>com.apple.developer.team-identifier</key>
+				<string>U4R2B2U7E6</string>
+				<key>get-task-allow</key>
+				<false/>
+			</dict>
+			<key>name</key>
+			<string>reachudemo.app</string>
+			<key>profile</key>
+			<dict>
+				<key>UUID</key>
+				<string>6a833d4c-4c65-4fb5-a065-3ad4b771424a</string>
+				<key>dateExpires</key>
+				<string>12/03/2026</string>
+				<key>name</key>
+				<string>iOS Team Ad Hoc Provisioning Profile: reachudev.reachudemo</string>
+			</dict>
+			<key>team</key>
+			<dict>
+				<key>id</key>
+				<string>U4R2B2U7E6</string>
+				<key>name</key>
+				<string>Miriam Martinez</string>
+			</dict>
+			<key>versionNumber</key>
+			<string>1.0</string>
+		</dict>
+	</array>
+</dict>
+</plist>

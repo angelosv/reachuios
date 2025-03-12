@@ -101,7 +101,6 @@ struct ReachuProductCard: View {
         .padding(8)
         .background(Color(UIColor.systemBackground))
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
         .onTapGesture(perform: onTap)
     }
 } 

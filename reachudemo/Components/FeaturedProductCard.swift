@@ -78,7 +78,6 @@ struct FeaturedProductCard: View {
         .padding(8)
         .background(colorScheme == .dark ? Color.black.opacity(0.6) : Color.white)
         .cornerRadius(16)
-        .shadow(color: colorScheme == .dark ? Color.purple.opacity(0.3) : Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(colorScheme == .dark ? Color.purple.opacity(0.3) : Color.clear, lineWidth: 1)
