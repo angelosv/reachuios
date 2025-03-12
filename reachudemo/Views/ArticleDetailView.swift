@@ -26,6 +26,7 @@ struct ArticleDetailView: View {
     
     @State private var selectedProduct: ReachuProduct? = nil
     @State private var showProductDetail = false
+    @State private var showOrderSuccess = false
     
     var body: some View {
         ScrollView {
@@ -87,7 +88,7 @@ struct ArticleDetailView: View {
                 // Tags
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
-                        ForEach(["Graviditet", "Omega-3", "Helse", "Babyutvikling"], id: \.self) { tag in
+                        ForEach(["Pregnancy", "Omega-3", "Health", "Baby Development"], id: \.self) { tag in
                             Text(tag)
                                 .font(.caption)
                                 .padding(.horizontal, 12)
@@ -173,7 +174,7 @@ struct ArticleDetailView: View {
                     .padding(.horizontal)
                 }
                 
-                // Añadir el componente de producto recomendado a todo ancho
+                // Recommended product component
                 VStack(alignment: .leading, spacing: 20) {
                     Divider()
                         .padding(.horizontal)
@@ -208,7 +209,7 @@ struct ArticleDetailView: View {
                         .padding(.horizontal)
                     
                     HStack {
-                        ForEach(["Graviditet", "Omega-3", "Helse", "Babyutvikling"], id: \.self) { tag in
+                        ForEach(["Pregnancy", "Omega-3", "Health", "Baby Development"], id: \.self) { tag in
                             Text(tag)
                                 .font(.caption)
                                 .padding(.horizontal, 12)
@@ -231,15 +232,61 @@ struct ArticleDetailView: View {
         }
         .sheet(isPresented: $showProductDetail) {
             if let product = selectedProduct {
-                ProductDetailView(product: product)
+                // Usar el componente ProductDetailModal existente
+                ZStack {
+                    Color.white.edgesIgnoringSafeArea(.all)
+                    
+                    VStack {
+                        // Header con botón de cierre
+                        HStack {
+                            Button(action: {
+                                showProductDetail = false
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .padding(8)
+                                    .background(Color.gray.opacity(0.1))
+                                    .clipShape(Circle())
+                            }
+                            
+                            Spacer()
+                            
+                            Text("Product Details")
+                                .font(.headline)
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        
+                        // Usar el ProductDetailModal pero sin el binding isPresented
+                        // y con una acción personalizada para añadir al carrito
+                        ProductDetailModal(
+                            product: product,
+                            isPresented: $showProductDetail,
+                            onAddToCart: { product, size, color, quantity in
+                                // Simular proceso de añadir al carrito y mostrar confirmación
+                                // En una aplicación real, esto añadiría el producto al carrito
+                                // y podría navegar a la vista de carrito o mostrar una confirmación
+                                simulatePlaceOrder()
+                            }
+                        )
+                    }
+                }
             }
+        }
+        .alert(isPresented: $showOrderSuccess) {
+            Alert(
+                title: Text("Order Successful"),
+                message: Text("Your order has been placed successfully."),
+                dismissButton: .default(Text("Continue Shopping"))
+            )
         }
     }
     
     private func fetchProduct() {
         let service = ReachuGraphQLService()
         
-        // Use a valid product ID from the Reachu API
         service.fetchProductById(productId: productId)
             .receive(on: DispatchQueue.main)
             .sink(
@@ -247,7 +294,6 @@ struct ArticleDetailView: View {
                     isLoadingProduct = false
                     if case .failure(let error) = completion {
                         print("Error fetching product: \(error)")
-                        // Si no podemos cargar el producto, usamos uno de demostración
                         createDemoProduct()
                     }
                 },
@@ -261,7 +307,6 @@ struct ArticleDetailView: View {
     private func fetchRecommendedProduct() {
         let service = ReachuGraphQLService()
         
-        // Use the fetchProductById method instead of the private performGraphQLRequest method
         service.fetchProductById(productId: omegaProductId)
             .receive(on: DispatchQueue.main)
             .sink(
@@ -269,7 +314,6 @@ struct ArticleDetailView: View {
                     isLoadingRecommended = false
                     if case .failure(let error) = completion {
                         print("Error fetching recommended product: \(error)")
-                        // If we can't load the product, use a demo one
                         createDemoRecommendedProduct()
                     }
                 },
@@ -317,233 +361,27 @@ struct ArticleDetailView: View {
     }
     
     private func addToCart(product: ReachuProduct) {
-        // Aquí implementarías la lógica para añadir al carrito
         print("Product added to cart: \(product.title)")
         
-        // Ejemplo de feedback visual (puedes implementar un toast o notificación)
         let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
         impactFeedback.impactOccurred()
     }
-}
-
-struct ProductDetailView: View {
-    let product: ReachuProduct
-    @Environment(\.presentationMode) var presentationMode
-    @State private var quantity = 1
-    @State private var showOrderConfirmation = false
-    @State private var isProcessing = false
     
-    var body: some View {
-        VStack {
-            // Header with close button
-            HStack {
-                Button(action: {
-                    presentationMode.wrappedValue.dismiss()
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.black)
-                        .padding(8)
-                        .background(Color.gray.opacity(0.1))
-                        .clipShape(Circle())
-                }
-                
-                Spacer()
-                
-                Text("Product Details")
-                    .font(.headline)
-                
-                Spacer()
-            }
-            .padding()
-            
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    // Product image
-                    if let imageURL = product.mainImageURL {
-                        RemoteImage(url: imageURL) {
-                            Rectangle()
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(height: 250)
-                        }
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 250)
-                    } else {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 250)
-                    }
-                    
-                    // Product information
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text(product.title)
-                            .font(.title3)
-                            .fontWeight(.bold)
-                        
-                        Text(product.formattedPrice)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(Color(hex: "#7300f9"))
-                        
-                        Divider()
-                        
-                        // Quantity selector
-                        HStack {
-                            Text("Quantity:")
-                                .font(.headline)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                if quantity > 1 {
-                                    quantity -= 1
-                                }
-                            }) {
-                                Image(systemName: "minus.circle")
-                                    .foregroundColor(Color(hex: "#7300f9"))
-                            }
-                            
-                            Text("\(quantity)")
-                                .font(.headline)
-                                .padding(.horizontal, 8)
-                            
-                            Button(action: {
-                                quantity += 1
-                            }) {
-                                Image(systemName: "plus.circle")
-                                    .foregroundColor(Color(hex: "#7300f9"))
-                            }
-                        }
-                        
-                        Divider()
-                        
-                        // Description - Apply stripHTML to product description
-                        if let description = product.description {
-                            Text("Description")
-                                .font(.headline)
-                                .padding(.top, 4)
-                            
-                            Text(description.stripHTML)
-                                .font(.body)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-            
-            // Buy button
-            Button(action: {
-                placeOrder()
-            }) {
-                HStack {
-                    if isProcessing {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            .padding(.trailing, 5)
-                    }
-                    
-                    Text(isProcessing ? "Processing..." : "Buy Now")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color(hex: "#7300f9"))
-                .cornerRadius(10)
-            }
-            .disabled(isProcessing)
-            .padding()
-        }
-        .sheet(isPresented: $showOrderConfirmation) {
-            ProductOrderSuccessView(product: product, quantity: quantity)
-        }
-    }
-    
-    private func placeOrder() {
-        // Simulate order processing
-        isProcessing = true
+    private func simulatePlaceOrder() {
+        showProductDetail = false
         
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-            isProcessing = false
-            showOrderConfirmation = true
+        // Simular una breve demora y luego mostrar el mensaje de éxito
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+            showOrderSuccess = true
         }
-    }
-}
-
-struct ProductOrderSuccessView: View {
-    let product: ReachuProduct
-    let quantity: Int
-    @Environment(\.presentationMode) var presentationMode
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            // Success icon
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
-                .foregroundColor(.green)
-                .padding(.top, 40)
-            
-            // Confirmation message
-            Text("Thank you for your purchase!")
-                .font(.title)
-                .fontWeight(.bold)
-            
-            Text("Your order has been successfully processed")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-            
-            // Basic details
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Order details:")
-                    .font(.headline)
-                    .padding(.bottom, 5)
-                
-                Text("Product: \(product.title)")
-                Text("Quantity: \(quantity)")
-                Text("Price: \(product.formattedPrice)")
-                
-                // Simplify total calculation to avoid issues with NumberFormatter
-                let totalAmount = Double(product.price.amount) ?? 0.0
-                let totalPrice = totalAmount * Double(quantity)
-                Text("Total: \(product.price.currency_code) \(String(format: "%.2f", totalPrice))")
-                    .fontWeight(.bold)
-            }
-            .padding()
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(10)
-            .padding(.horizontal)
-            
-            Spacer()
-            
-            // Continue button
-            Button(action: {
-                presentationMode.wrappedValue.dismiss()
-            }) {
-                Text("Continue Shopping")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color(hex: "#7300f9"))
-                    .cornerRadius(10)
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 20)
-        }
-        .padding()
     }
 }
 
 #Preview {
     ArticleDetailView(article: Article(
         id: "1",
-        title: "Hvorfor er Omega-3 viktig under graviditet og for babyens helse?",
-        content: "Omega-3-fettsyrer spiller en avgjørende rolle under graviditeten og for babyens utvikling...",
+        title: "Why is Omega-3 important during pregnancy and for baby's health?",
+        content: "Omega-3 fatty acids play a crucial role during pregnancy and for baby's development...",
         imageURL: URL(string: "https://picsum.photos/800/600"),
         category: "Health"
     ))
