@@ -1,6 +1,14 @@
 import SwiftUI
 import Combine
 
+// Extensión para String para eliminar etiquetas HTML
+extension String {
+    var stripHTML: String {
+        let processed = self.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+        return processed.replacingOccurrences(of: "&[^;]+;", with: " ", options: .regularExpression)
+    }
+}
+
 struct ArticleDetailView: View {
     let article: Article
     @State private var product: ReachuProduct?
@@ -15,6 +23,9 @@ struct ArticleDetailView: View {
     let productId = 1904016 // Updated product ID
     // Specific product ID for recommended section
     let omegaProductId = 1904019 // Updated recommended product ID
+    
+    @State private var selectedProduct: ReachuProduct? = nil
+    @State private var showProductDetail = false
     
     var body: some View {
         ScrollView {
@@ -88,8 +99,8 @@ struct ArticleDetailView: View {
                     .padding(.horizontal)
                 }
                 
-                // First paragraph
-                Text(article.content)
+                // First paragraph - Apply stripHTML to article content
+                Text(article.content.stripHTML)
                     .padding(.horizontal)
                     .padding(.top, 8)
                 
@@ -106,53 +117,59 @@ struct ArticleDetailView: View {
                     .cornerRadius(12)
                     .padding(.horizontal)
                 } else if let product = product {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            if let mainImageURL = product.mainImageURL {
-                                RemoteImage(url: mainImageURL) {
+                    Button(action: {
+                        selectedProduct = product
+                        showProductDetail = true
+                    }) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                if let mainImageURL = product.mainImageURL {
+                                    RemoteImage(url: mainImageURL) {
+                                        Rectangle()
+                                            .fill(Color.gray.opacity(0.3))
+                                            .frame(width: 80, height: 80)
+                                    }
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 80, height: 80)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                } else {
                                     Rectangle()
                                         .fill(Color.gray.opacity(0.3))
                                         .frame(width: 80, height: 80)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
                                 }
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 80, height: 80)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                            } else {
-                                Rectangle()
-                                    .fill(Color.gray.opacity(0.3))
-                                    .frame(width: 80, height: 80)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text(product.title)
-                                    .font(.headline)
-                                    .lineLimit(1)
                                 
-                                Text(product.formattedPrice)
-                                    .font(.subheadline)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(Color(hex: "#7300f9"))
-                            }
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                // Add to cart action
-                            }) {
-                                Text("Add")
-                                    .fontWeight(.semibold)
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(Color(hex: "#7300f9"))
-                                    .cornerRadius(20)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text(product.title)
+                                        .font(.headline)
+                                        .lineLimit(1)
+                                    
+                                    Text(product.formattedPrice)
+                                        .font(.subheadline)
+                                        .fontWeight(.bold)
+                                        .foregroundColor(Color(hex: "#7300f9"))
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    addToCart(product: product)
+                                }) {
+                                    Text("Add")
+                                        .fontWeight(.semibold)
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(Color(hex: "#7300f9"))
+                                        .cornerRadius(20)
+                                }
                             }
                         }
+                        .padding()
+                        .background(Color(hex: "#F5F5F5").opacity(0.5))
+                        .cornerRadius(12)
                     }
-                    .padding()
-                    .background(Color(hex: "#F5F5F5").opacity(0.5))
-                    .cornerRadius(12)
+                    .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal)
                 }
                 
@@ -173,12 +190,11 @@ struct ArticleDetailView: View {
                         FullWidthProductCard(
                             product: recommendedProduct,
                             onAddToCart: {
-                                // Acción para añadir al carrito
-                                print("Producto añadido al carrito: \(recommendedProduct.title)")
+                                addToCart(product: recommendedProduct)
                             },
                             onTap: {
-                                // Acción para navegar al detalle del producto
-                                print("Navegando al detalle del producto: \(recommendedProduct.title)")
+                                selectedProduct = recommendedProduct
+                                showProductDetail = true
                             }
                         )
                         .padding(.horizontal)
@@ -212,6 +228,11 @@ struct ArticleDetailView: View {
         .onAppear {
             fetchProduct()
             fetchRecommendedProduct()
+        }
+        .sheet(isPresented: $showProductDetail) {
+            if let product = selectedProduct {
+                ProductDetailView(product: product)
+            }
         }
     }
     
@@ -293,6 +314,228 @@ struct ArticleDetailView: View {
             description: "High-quality omega-3 supplement specially formulated for pregnant women. Supports brain and eye development in babies."
         )
         self.recommendedProduct = demoProduct
+    }
+    
+    private func addToCart(product: ReachuProduct) {
+        // Aquí implementarías la lógica para añadir al carrito
+        print("Product added to cart: \(product.title)")
+        
+        // Ejemplo de feedback visual (puedes implementar un toast o notificación)
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+    }
+}
+
+struct ProductDetailView: View {
+    let product: ReachuProduct
+    @Environment(\.presentationMode) var presentationMode
+    @State private var quantity = 1
+    @State private var showOrderConfirmation = false
+    @State private var isProcessing = false
+    
+    var body: some View {
+        VStack {
+            // Header with close button
+            HStack {
+                Button(action: {
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.black)
+                        .padding(8)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                
+                Spacer()
+                
+                Text("Product Details")
+                    .font(.headline)
+                
+                Spacer()
+            }
+            .padding()
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Product image
+                    if let imageURL = product.mainImageURL {
+                        RemoteImage(url: imageURL) {
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(height: 250)
+                        }
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxHeight: 250)
+                    } else {
+                        Rectangle()
+                            .fill(Color.gray.opacity(0.3))
+                            .frame(height: 250)
+                    }
+                    
+                    // Product information
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(product.title)
+                            .font(.title3)
+                            .fontWeight(.bold)
+                        
+                        Text(product.formattedPrice)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(Color(hex: "#7300f9"))
+                        
+                        Divider()
+                        
+                        // Quantity selector
+                        HStack {
+                            Text("Quantity:")
+                                .font(.headline)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                if quantity > 1 {
+                                    quantity -= 1
+                                }
+                            }) {
+                                Image(systemName: "minus.circle")
+                                    .foregroundColor(Color(hex: "#7300f9"))
+                            }
+                            
+                            Text("\(quantity)")
+                                .font(.headline)
+                                .padding(.horizontal, 8)
+                            
+                            Button(action: {
+                                quantity += 1
+                            }) {
+                                Image(systemName: "plus.circle")
+                                    .foregroundColor(Color(hex: "#7300f9"))
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        // Description - Apply stripHTML to product description
+                        if let description = product.description {
+                            Text("Description")
+                                .font(.headline)
+                                .padding(.top, 4)
+                            
+                            Text(description.stripHTML)
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            
+            // Buy button
+            Button(action: {
+                placeOrder()
+            }) {
+                HStack {
+                    if isProcessing {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .padding(.trailing, 5)
+                    }
+                    
+                    Text(isProcessing ? "Processing..." : "Buy Now")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color(hex: "#7300f9"))
+                .cornerRadius(10)
+            }
+            .disabled(isProcessing)
+            .padding()
+        }
+        .sheet(isPresented: $showOrderConfirmation) {
+            ProductOrderSuccessView(product: product, quantity: quantity)
+        }
+    }
+    
+    private func placeOrder() {
+        // Simulate order processing
+        isProcessing = true
+        
+        // Simulate API call
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            isProcessing = false
+            showOrderConfirmation = true
+        }
+    }
+}
+
+struct ProductOrderSuccessView: View {
+    let product: ReachuProduct
+    let quantity: Int
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            // Success icon
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 80))
+                .foregroundColor(.green)
+                .padding(.top, 40)
+            
+            // Confirmation message
+            Text("Thank you for your purchase!")
+                .font(.title)
+                .fontWeight(.bold)
+            
+            Text("Your order has been successfully processed")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            // Basic details
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Order details:")
+                    .font(.headline)
+                    .padding(.bottom, 5)
+                
+                Text("Product: \(product.title)")
+                Text("Quantity: \(quantity)")
+                Text("Price: \(product.formattedPrice)")
+                
+                // Simplify total calculation to avoid issues with NumberFormatter
+                let totalAmount = Double(product.price.amount) ?? 0.0
+                let totalPrice = totalAmount * Double(quantity)
+                Text("Total: \(product.price.currency_code) \(String(format: "%.2f", totalPrice))")
+                    .fontWeight(.bold)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gray.opacity(0.1))
+            .cornerRadius(10)
+            .padding(.horizontal)
+            
+            Spacer()
+            
+            // Continue button
+            Button(action: {
+                presentationMode.wrappedValue.dismiss()
+            }) {
+                Text("Continue Shopping")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(hex: "#7300f9"))
+                    .cornerRadius(10)
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 20)
+        }
+        .padding()
     }
 }
 
