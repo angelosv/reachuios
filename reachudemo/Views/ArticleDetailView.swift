@@ -72,7 +72,7 @@ struct ArticleDetailView: View {
                 // Tags
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack {
-                        ForEach(["Diabetic", "Health", "Lifestyle"], id: \.self) { tag in
+                        ForEach(["Graviditet", "Omega-3", "Helse", "Babyutvikling"], id: \.self) { tag in
                             Text(tag)
                                 .font(.caption)
                                 .padding(.horizontal, 12)
@@ -85,7 +85,7 @@ struct ArticleDetailView: View {
                 }
                 
                 // First paragraph
-                Text("Lorem ipsum dolor sit amet consectetur. Interdum viverra vitae lectus mi quis pharetra. Vel fusce sed viverra eget a ante mauris libero adipiscing. Pellentesque urna nulla dictum lacus pharetra viverra urna nisi nisi. Bibendum fames nibh pellentesque at mus nunc risus.")
+                Text(article.content)
                     .padding(.horizontal)
                     .padding(.top, 8)
                 
@@ -152,15 +152,6 @@ struct ArticleDetailView: View {
                     .padding(.horizontal)
                 }
                 
-                // More paragraphs
-                Text("Sem cras eget eleifend cursus pretium id in vulputate. Dignissim vel vestibulum orci curabitur. Nullam fermentum sed nunc massa. Porttitor habitant facilisis vel arcu.")
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                
-                Text("Libero facilisis nisl consectetur nisi nunc a consequat. Ullamcorper augue massa nunc sagittis ipsum sed eu quisque. Morbi dui et neque urna consectetur nunc massa. Pharetra volutpat semper nisi faucibus. Sed lectus at libero hendrerit tristique nunc.")
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                
                 // Tags section at the bottom
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Tags")
@@ -168,7 +159,7 @@ struct ArticleDetailView: View {
                         .padding(.horizontal)
                     
                     HStack {
-                        ForEach(["Diabetic", "Health", "Lifestyle"], id: \.self) { tag in
+                        ForEach(["Graviditet", "Omega-3", "Helse", "Babyutvikling"], id: \.self) { tag in
                             Text(tag)
                                 .font(.caption)
                                 .padding(.horizontal, 12)
