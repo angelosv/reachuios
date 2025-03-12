@@ -563,14 +563,16 @@ class ReachuGraphQLService {
     func fetchProductById(productId: Int) -> AnyPublisher<ReachuProduct, Error> {
         print("🔍 Iniciando solicitud GraphQL para obtener producto con ID: \(productId)")
         
+        // Using the specific query provided for the Omega-3 product
         let query = """
-        query GetProductsByIds {
+        query {
           Channel {
             GetProductsByIds(product_ids: [\(productId)]) {
               id
               images {
                 url
                 order
+                id
               }
               supplier
               price {
@@ -600,15 +602,20 @@ class ReachuGraphQLService {
                 
                 // Intentar obtener el producto
                 do {
-                    let decoder = JSONDecoder()
                     let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
                     
                     if let dataObj = json?["data"] as? [String: Any],
                        let channel = dataObj["Channel"] as? [String: Any],
-                       let products = channel["GetProductsByIds"] as? [[String: Any]],
-                       let productJson = products.first {
+                       let products = channel["GetProductsByIds"] as? [[String: Any]] {
                         
-                        if let product = createProduct(from: productJson, index: 0) {
+                        // Verificar si el arreglo de productos está vacío
+                        if products.isEmpty {
+                            print("⚠️ No se encontraron productos con ID: \(productId)")
+                            throw APIError.invalidResponse
+                        }
+                        
+                        if let productJson = products.first,
+                           let product = createProduct(from: productJson, index: 0) {
                             return product
                         }
                     }
