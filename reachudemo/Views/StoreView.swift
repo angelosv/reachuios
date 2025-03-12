@@ -103,8 +103,13 @@ struct StoreView: View {
                             // Featured products in a horizontal scrollview
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 16) {
-                                    // Display first 5 products as featured
-                                    ForEach(Array(viewModel.reachuProducts.prefix(5))) { product in
+                                    // Display first 5 products as featured - agregando print para depuración
+                                    ForEach(Array(viewModel.reachuProducts.prefix(5).enumerated()), id: \.element.id) { index, product in
+                                        let productIndex = index
+                                        
+                                        // Imprimir información para depuración
+                                        let _ = print("Mostrando producto featured \(productIndex): id=\(product.id), title=\(product.title), tiene imagen=\(product.mainImageURL != nil)")
+                                        
                                         FeaturedProductCard(
                                             product: product,
                                             onTap: {
@@ -141,8 +146,13 @@ struct StoreView: View {
                             // Most popular products in a horizontal scrollview
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 16) {
-                                    // Display next 5 products as most popular
-                                    ForEach(Array(viewModel.reachuProducts.dropFirst(5).prefix(5))) { product in
+                                    // Display next 5 products as most popular - agregando print para depuración
+                                    ForEach(Array(viewModel.reachuProducts.dropFirst(5).prefix(5).enumerated()), id: \.element.id) { index, product in
+                                        let productIndex = index + 5
+                                        
+                                        // Imprimir información para depuración
+                                        let _ = print("Mostrando producto popular \(productIndex): id=\(product.id), title=\(product.title), tiene imagen=\(product.mainImageURL != nil)")
+                                        
                                         PopularProductCard(
                                             product: product,
                                             onTap: {

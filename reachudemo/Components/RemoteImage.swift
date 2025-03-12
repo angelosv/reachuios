@@ -11,6 +11,8 @@ struct RemoteImage: View {
         
         private var url: URL
         private var task: URLSessionDataTask?
+        private var retryCount = 0
+        private let maxRetries = 2
         
         init(url: URL) {
             self.url = url
@@ -22,34 +24,44 @@ struct RemoteImage: View {
             
             task?.cancel()
             
+            print("🔄 Cargando imagen desde: \(url.absoluteString)")
+            
             task = URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
                 guard let self = self else { return }
                 
                 DispatchQueue.main.async {
                     if let error = error {
                         print("❌ Error cargando imagen: \(error.localizedDescription)")
-                        self.state = .failure
+                        self.handleError()
                         return
                     }
                     
                     guard let httpResponse = response as? HTTPURLResponse else {
                         print("❌ No es una respuesta HTTP válida")
-                        self.state = .failure
+                        self.handleError()
                         return
                     }
                     
                     guard (200...299).contains(httpResponse.statusCode) else {
                         print("❌ Código de respuesta HTTP incorrecto: \(httpResponse.statusCode)")
-                        self.state = .failure
+                        self.handleError()
                         return
                     }
                     
                     guard let data = data, data.count > 0 else {
                         print("❌ Datos de imagen vacíos o nulos")
-                        self.state = .failure
+                        self.handleError()
                         return
                     }
                     
+                    // Verificar que los datos sean una imagen válida
+                    if UIImage(data: data) == nil {
+                        print("❌ Los datos no corresponden a una imagen válida")
+                        self.handleError()
+                        return
+                    }
+                    
+                    self.retryCount = 0
                     self.data = data
                     self.state = .success
                     print("✅ Imagen cargada correctamente: \(self.url.absoluteString)")
@@ -59,7 +71,23 @@ struct RemoteImage: View {
             task?.resume()
         }
         
+        func handleError() {
+            if retryCount < maxRetries {
+                retryCount += 1
+                print("🔄 Reintentando carga de imagen (\(retryCount)/\(maxRetries)): \(url.absoluteString)")
+                
+                // Esperar un poco antes de reintentar
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    self?.loadImage()
+                }
+            } else {
+                print("❌ Falló la carga de imagen después de \(maxRetries) intentos: \(url.absoluteString)")
+                state = .failure
+            }
+        }
+        
         func retry() {
+            retryCount = 0
             loadImage()
         }
         

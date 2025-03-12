@@ -234,7 +234,7 @@ struct ErrorLocation: Codable {
 
 class ReachuGraphQLService {
     private let endpointURL = URL(string: "https://graph-ql.reachu.io/")!
-    private let authToken = "2B1548S-10NME51-QFJTW9X-AFKEAGS"
+    private let authToken = "ZN7EYWW-ZVX4PD9-Q74031G-MXTHK3R"
     
     enum APIError: Error, LocalizedError {
         case invalidResponse
@@ -267,12 +267,15 @@ class ReachuGraphQLService {
               images {
                 url
                 order
+                id
               }
               price {
                 currency_code
                 amount
+                compare_at
               }
               title
+              description
             }
           }
         }
@@ -293,13 +296,30 @@ class ReachuGraphQLService {
                     let response = try decoder.decode(ReachuResponse.self, from: data)
                     print("✅ Decodificación exitosa, se encontraron \(response.data.Channel.GetProducts.count) productos")
                     
-                    // Imprimir información detallada de productos
+                    // Imprimir información detallada de productos y filtrar productos inválidos
+                    var validProducts: [ReachuProduct] = []
+                    
                     for (index, product) in response.data.Channel.GetProducts.enumerated() {
                         print("📝 Producto \(index + 1): id=\(product.id), title=\(product.title), precio=\(product.price.amount) \(product.price.currency_code)")
+                        
+                        if product.images.isEmpty {
+                            print("⚠️ Producto \(index + 1) no tiene imágenes, se omitirá")
+                            continue
+                        }
+                        
                         print("   🖼️ \(product.images.count) imágenes, primera URL: \(product.images.first?.url ?? "N/A")")
+                        
+                        // Verificar que la URL de la imagen sea válida
+                        if let mainImageURL = product.mainImageURL {
+                            print("   ✅ URL principal válida: \(mainImageURL)")
+                            validProducts.append(product)
+                        } else {
+                            print("   ⚠️ URL principal inválida, se omitirá el producto")
+                        }
                     }
                     
-                    return response.data.Channel.GetProducts
+                    print("✅ Total de productos válidos: \(validProducts.count)")
+                    return validProducts
                 } catch {
                     print("❌ Error al decodificar con estructura esperada: \(error)")
                     
@@ -310,7 +330,24 @@ class ReachuGraphQLService {
                         
                         if let products = alternativeResponse.extractProducts() {
                             print("✅ Decodificación alternativa exitosa, se encontraron \(products.count) productos")
-                            return products
+                            
+                            // Filtrar productos sin imágenes o con URLs inválidas
+                            let validProducts = products.filter { product in
+                                if product.images.isEmpty {
+                                    print("⚠️ Producto \(product.id) no tiene imágenes, se omitirá")
+                                    return false
+                                }
+                                
+                                if product.mainImageURL == nil {
+                                    print("⚠️ Producto \(product.id) tiene URL de imagen inválida, se omitirá")
+                                    return false
+                                }
+                                
+                                return true
+                            }
+                            
+                            print("✅ Total de productos válidos: \(validProducts.count)")
+                            return validProducts
                         } else {
                             print("❌ No se pudieron extraer productos de la estructura alternativa")
                             throw APIError.decodingError(error)
@@ -484,7 +521,7 @@ class ReachuGraphQLService {
         
         print("🚀 Enviando solicitud GraphQL a \(url)")
         print("🔑 Usando token: \(authToken)")
-        print("�� Query: \(query)")
+        print(" Query: \(query)")
         
         return URLSession.shared.dataTaskPublisher(for: request)
             .tryMap { data, response -> Data in
