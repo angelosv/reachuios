@@ -47,16 +47,18 @@ struct VideoPlayerView: View {
     let videoId: String
     @Environment(\.presentationMode) var presentationMode
     @State private var isLoading = true
-    @State private var isPlaying = true
     @State private var showProductsOverlay = false
     @State private var errorMessage: String = ""
     @State private var showProductDetail = false
     @State private var selectedProduct: ReachuProduct?
     @State private var videoUrl: String? = nil
     @State private var debugLog: String = ""
+    @State private var isPlaying: Bool = true
+    @State private var videoProgress: Double = 0.0
+    @State private var videoDuration: Double = 100.0 // Default value until we get the real duration
     
-    // Simple fallback URL with minimal parameters - prevent fullscreen
-    private let fallbackVideoURL = "https://player.vimeo.com/video/760249219?autoplay=1&title=0&byline=0&portrait=0&fullscreen=0"
+    // Fallback video URL - using the correct Vimeo ID
+    private let fallbackVideoURL = "https://player.vimeo.com/video/1038569063"
     
     // Use LiveShowViewModel to access real products
     @StateObject private var viewModel = LiveShowViewModel()
@@ -67,12 +69,17 @@ struct VideoPlayerView: View {
                 // Always black background
                 Color.black.edgesIgnoringSafeArea(.all)
                 
-                // Video player
+                // Super simple video player - just load the URL directly
                 if let videoUrlString = videoUrl, !videoUrlString.isEmpty {
-                    SimpleVideoWebView(urlString: videoUrlString)
+                    SuperSimpleVideoPlayer(
+                        urlString: videoUrlString,
+                        isPlaying: $isPlaying,
+                        videoProgress: $videoProgress,
+                        videoDuration: $videoDuration
+                    )
                     .edgesIgnoringSafeArea(.all)
                     .onAppear {
-                        addLog("WebView appeared with URL: \(videoUrlString)")
+                        addLog("Video player appeared with URL: \(videoUrlString)")
                         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             isLoading = false
                         }
@@ -96,42 +103,14 @@ struct VideoPlayerView: View {
                                 .font(.caption)
                                 .padding()
                         }
-                        
-                        // Show logs for diagnostics
-                        ScrollView {
-                            Text(debugLog)
-                                .font(.system(size: 12))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding()
-                        }
-                        .frame(height: 200)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
                 }
                 
-                // Large play button in the center - simplified
-                if !isLoading {
-                    Button(action: {
-                        isPlaying.toggle()
-                        addLog("Play/Pause toggled: \(isPlaying ? "Playing" : "Paused")")
-                    }) {
-                        Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: 80, height: 80)
-                            .foregroundColor(.white.opacity(0.8))
-                            .background(Color.black.opacity(0.3))
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 0)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                
                 // Controls and products overlay
                 VStack(spacing: 0) {
-                    // Top controls
+                    // Top controls - just back button
                     HStack {
                         Button(action: {
                             presentationMode.wrappedValue.dismiss()
@@ -146,130 +125,44 @@ struct VideoPlayerView: View {
                         .padding([.top, .leading], 16)
                         
                         Spacer()
-                        
-                        // Button to show/hide products
-                        Button(action: {
-                            withAnimation {
-                                showProductsOverlay.toggle()
-                            }
-                        }) {
-                            Image(systemName: showProductsOverlay ? "bag.fill" : "bag")
-                                .font(.system(size: 18))
-                                .foregroundColor(.white)
-                                .padding(10)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
-                        }
-                        .padding([.top, .trailing], 8)
-                        
-                        Button(action: {}) {
-                            Image(systemName: "heart")
-                                .font(.system(size: 18))
-                                .foregroundColor(.white)
-                                .padding(10)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
-                        }
-                        .padding([.top, .trailing], 8)
-                        
-                        Button(action: {}) {
-                            Image(systemName: "arrowshape.turn.up.right")
-                                .font(.system(size: 18))
-                                .foregroundColor(.white)
-                                .padding(10)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
-                        }
-                        .padding([.top, .trailing], 16)
                     }
                     
                     Spacer()
                     
-                    // Video Controls
-                    HStack(spacing: 40) {
-                        Button(action: {
-                            addLog("Rewinding 10 seconds (not implemented)")
-                        }) {
-                            Image(systemName: "gobackward.10")
-                                .font(.system(size: 22))
-                                .foregroundColor(.white)
-                        }
-                        
-                        Button(action: {
-                            isPlaying.toggle()
-                            addLog("Play/Pause from bottom controls: \(isPlaying ? "Playing" : "Paused")")
-                        }) {
-                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 32))
-                                .foregroundColor(.white)
-                        }
-                        
-                        Button(action: {
-                            addLog("Fast forwarding 10 seconds (not implemented)")
-                        }) {
-                            Image(systemName: "goforward.10")
-                                .font(.system(size: 22))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding(.vertical, 16)
-                    .padding(.horizontal, 24)
-                    .background(Color.black.opacity(0.6))
-                    .cornerRadius(20)
-                    .padding(.bottom, 24)
-                    
-                    // Optional products panel that can be shown/hidden
-                    if showProductsOverlay {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                ForEach(viewModel.products) { product in
-                                    LiveShowProductCard(
-                                        product: product,
-                                        onAddToCart: {
-                                            // Simulate adding to cart
-                                            let generator = UIImpactFeedbackGenerator(style: .medium)
-                                            generator.impactOccurred()
-                                        }
-                                    )
-                                    .frame(width: 280)
-                                    .onTapGesture {
-                                        selectedProduct = product
-                                        showProductDetail = true
-                                    }
+                    // Bottom area with products carousel and video controls
+                    VStack(spacing: 16) {
+                        // Floating carousel at the bottom
+                        if !viewModel.products.isEmpty && !isLoading {
+                            LiveProductCarousel(
+                                products: viewModel.products,
+                                onProductTap: { product in
+                                    selectedProduct = product
+                                    showProductDetail = true
+                                },
+                                onAddToCart: { product in
+                                    // Simulate adding to cart
+                                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                                    generator.impactOccurred()
                                 }
-                            }
-                            .padding()
+                            )
+                            .padding(.bottom, 24)
                         }
-                        .background(Color.black.opacity(0.7))
-                        .cornerRadius(15)
-                        .padding(.horizontal)
-                        .padding(.bottom, 8)
-                        .frame(height: 180)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        
+                        // Video controls
+                        if !isLoading {
+                            VideoControlsView(
+                                isPlaying: $isPlaying,
+                                progress: $videoProgress,
+                                duration: $videoDuration
+                            )
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+                            .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom + 16 : 24)
+                            .background(Color.black.opacity(0.6))
+                        }
                     }
                 }
                 .edgesIgnoringSafeArea(.all)
-                
-                // Floating carousel at the bottom - moved up with padding bottom
-                if !viewModel.products.isEmpty {
-                    VStack {
-                        Spacer()
-                        LiveProductCarousel(
-                            products: viewModel.products,
-                            onProductTap: { product in
-                                selectedProduct = product
-                                showProductDetail = true
-                            },
-                            onAddToCart: { product in
-                                // Simulate adding to cart
-                                let generator = UIImpactFeedbackGenerator(style: .medium)
-                                generator.impactOccurred()
-                            }
-                        )
-                        // Added more padding to move it up
-                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom + 60 : 80)
-                    }
-                }
                 
                 // Loading indicator
                 if isLoading {
@@ -278,18 +171,18 @@ struct VideoPlayerView: View {
                         .foregroundColor(.white)
                 }
                 
-                // Debug button to show log
+                // Debug overlay - tap to show logs
                 VStack {
                     HStack {
                         Spacer()
                         Button(action: {
-                            addLog("Debug button pressed")
+                            print("Debug logs: \n\(debugLog)")
                         }) {
                             Image(systemName: "info.circle")
                                 .font(.system(size: 16))
-                                .foregroundColor(.white)
+                                .foregroundColor(.white.opacity(0.7))
                                 .padding(8)
-                                .background(Color.black.opacity(0.7))
+                                .background(Color.black.opacity(0.5))
                                 .clipShape(Circle())
                         }
                         .padding(8)
@@ -363,6 +256,33 @@ struct VideoPlayerView: View {
         print("📹 VideoLog: \(message)")
     }
     
+    // Convert Vimeo URL from "https://vimeo.com/ID" to "https://player.vimeo.com/video/ID"
+    private func convertVimeoUrl(_ originalUrl: String) -> String {
+        addLog("Converting Vimeo URL: \(originalUrl)")
+        
+        // Check if it's already in the player format
+        if originalUrl.contains("player.vimeo.com/video") {
+            addLog("URL already in player format")
+            return originalUrl
+        }
+        
+        // Extract the ID from the URL
+        let components = originalUrl.components(separatedBy: "/")
+        guard let lastComponent = components.last else {
+            addLog("❌ Could not extract ID from URL")
+            return fallbackVideoURL
+        }
+        
+        // Remove any query parameters
+        let id = lastComponent.components(separatedBy: "?").first ?? lastComponent
+        
+        // Create the player URL
+        let playerUrl = "https://player.vimeo.com/video/\(id)"
+        addLog("✅ Converted URL: \(playerUrl)")
+        
+        return playerUrl
+    }
+    
     private func fetchVideo() {
         // Start with fallback video URL for faster loading
         addLog("Setting fallback video URL: \(fallbackVideoURL)")
@@ -400,6 +320,11 @@ struct VideoPlayerView: View {
                 return
             }
             
+            // Log raw response for debugging
+            if let responseString = String(data: data, encoding: .utf8) {
+                addLog("📄 Raw API response: \(responseString)")
+            }
+            
             do {
                 let response = try JSONDecoder().decode(VideoResponse.self, from: data)
                 addLog("✅ API response decoded: \(response.url)")
@@ -407,15 +332,10 @@ struct VideoPlayerView: View {
                 if response.executed {
                     DispatchQueue.main.async {
                         if !response.url.isEmpty {
-                            // Use the API response URL but add minimal required parameters
-                            var modifiedUrl = response.url
-                            if !modifiedUrl.contains("?") {
-                                modifiedUrl += "?autoplay=1&title=0&byline=0&portrait=0&fullscreen=0"
-                            } else if !modifiedUrl.contains("autoplay=") {
-                                modifiedUrl += "&autoplay=1&fullscreen=0"
-                            }
-                            addLog("🔄 Using video URL: \(modifiedUrl)")
-                            self.videoUrl = modifiedUrl
+                            // Convert the URL from the API response to the player format
+                            let convertedUrl = convertVimeoUrl(response.url)
+                            addLog("🔄 Using converted URL: \(convertedUrl)")
+                            self.videoUrl = convertedUrl
                         } else {
                             addLog("⚠️ Empty URL in response, keeping fallback")
                         }
@@ -433,145 +353,453 @@ struct VideoPlayerView: View {
     }
 }
 
-// Simple WebView for playing Vimeo videos
-struct SimpleVideoWebView: UIViewRepresentable {
+// Video controls view
+struct VideoControlsView: View {
+    @Binding var isPlaying: Bool
+    @Binding var progress: Double
+    @Binding var duration: Double
+    @State private var isDragging = false
+    
+    // Format seconds to MM:SS
+    private func formatTime(_ seconds: Double) -> String {
+        let minutes = Int(seconds) / 60
+        let seconds = Int(seconds) % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    // Background track
+                    Rectangle()
+                        .fill(Color.white.opacity(0.3))
+                        .frame(height: 4)
+                        .cornerRadius(2)
+                    
+                    // Progress track
+                    Rectangle()
+                        .fill(Color.white)
+                        .frame(width: max(0, min(CGFloat(progress) * geometry.size.width, geometry.size.width)), height: 4)
+                        .cornerRadius(2)
+                    
+                    // Draggable thumb
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 12, height: 12)
+                        .offset(x: max(0, min(CGFloat(progress) * geometry.size.width - 6, geometry.size.width - 12)))
+                        .gesture(
+                            DragGesture(minimumDistance: 0)
+                                .onChanged { value in
+                                    isDragging = true
+                                    let newProgress = max(0, min(value.location.x / geometry.size.width, 1.0))
+                                    progress = Double(newProgress)
+                                }
+                                .onEnded { _ in
+                                    isDragging = false
+                                }
+                        )
+                }
+                .frame(height: 12) // Make the hit area larger
+            }
+            .frame(height: 12)
+            .padding(.vertical, 8)
+            
+            // Time and controls
+            HStack {
+                // Current time
+                Text(formatTime(progress * duration))
+                    .font(.system(size: 12))
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                // Control buttons
+                HStack(spacing: 24) {
+                    // Rewind 10 seconds
+                    Button(action: {
+                        progress = max(0, progress - (10 / duration))
+                    }) {
+                        Image(systemName: "gobackward.10")
+                            .font(.system(size: 22))
+                            .foregroundColor(.white)
+                    }
+                    
+                    // Play/Pause
+                    Button(action: {
+                        isPlaying.toggle()
+                    }) {
+                        Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.white)
+                    }
+                    
+                    // Forward 10 seconds
+                    Button(action: {
+                        progress = min(1.0, progress + (10 / duration))
+                    }) {
+                        Image(systemName: "goforward.10")
+                            .font(.system(size: 22))
+                            .foregroundColor(.white)
+                    }
+                }
+                
+                Spacer()
+                
+                // Duration
+                Text(formatTime(duration))
+                    .font(.system(size: 12))
+                    .foregroundColor(.white)
+            }
+        }
+    }
+}
+
+// Super simple video player - just load the URL directly
+struct SuperSimpleVideoPlayer: UIViewRepresentable {
     let urlString: String
+    @Binding var isPlaying: Bool
+    @Binding var videoProgress: Double
+    @Binding var videoDuration: Double
     
     func makeUIView(context: Context) -> WKWebView {
-        print("Creating simple WebView with URL: \(urlString)")
+        print("Creating super simple video player with URL: \(urlString)")
         
+        // Basic configuration
         let configuration = WKWebViewConfiguration()
         configuration.allowsInlineMediaPlayback = true
         configuration.mediaTypesRequiringUserActionForPlayback = []
         
+        // Create the WebView with minimal settings
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.scrollView.isScrollEnabled = false
         webView.scrollView.bounces = false
         webView.backgroundColor = .black
         webView.isOpaque = false
         
-        // Disable user interaction to prevent fullscreen
-        webView.allowsBackForwardNavigationGestures = false
+        // Add a navigation delegate to log loading errors
+        webView.navigationDelegate = context.coordinator
+        
+        // Setup observer for isPlaying changes
+        context.coordinator.webView = webView
+        context.coordinator.parent = self
         
         return webView
     }
     
-    func updateUIView(_ webView: WKWebView, context: Context) {
-        guard let url = URL(string: urlString) else {
-            print("Invalid URL: \(urlString)")
-            return
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, WKNavigationDelegate {
+        var parent: SuperSimpleVideoPlayer
+        var webView: WKWebView?
+        var progressUpdateTimer: Timer?
+        var isDragging: Bool = false
+        var tempProgress: Double = 0
+        var tempDuration: Double = 0
+        var tempIsPlaying: Bool = false
+        var needsUpdate: Bool = false
+        
+        init(_ parent: SuperSimpleVideoPlayer) {
+            self.parent = parent
+            self.tempIsPlaying = parent.isPlaying
+            super.init()
+            
+            // Start a timer to update progress
+            progressUpdateTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+                self?.updateVideoProgress()
+            }
         }
         
-        print("Loading URL in WebView: \(urlString)")
-        webView.load(URLRequest(url: url))
+        deinit {
+            progressUpdateTimer?.invalidate()
+        }
         
-        // Add simple CSS to enlarge the video (zoom effect) and prevent fullscreen
-        let cssScript = """
-        setTimeout(function() {
-            var style = document.createElement('style');
-            style.textContent = `
-                video {
-                    transform: scale(1.5) !important;
-                    transform-origin: center !important;
-                }
-                .vp-controls, .vp-title, .vp-logo, .vp-portrait, .vp-sidedock, 
-                button, .vp-fullscreen-button, .vp-picture-in-picture-button,
-                .vp-menu-button, .vp-volume-button, .vp-playback-rate-button {
-                    display: none !important;
-                    opacity: 0 !important;
-                    visibility: hidden !important;
-                    pointer-events: none !important;
-                }
-                
-                /* Prevent fullscreen mode */
-                .vp-fullscreen, .vp-target {
-                    pointer-events: none !important;
-                }
-                
-                /* Make video fill entire screen */
-                .vp-player, .vp-player video, .vp-telecine {
-                    width: 100vw !important;
-                    height: 100vh !important;
-                    max-width: none !important;
-                    max-height: none !important;
-                    object-fit: cover !important;
-                }
-            `;
-            document.head.appendChild(style);
-            console.log('Added CSS for zoom effect');
+        func updateVideoProgress() {
+            guard let webView = webView else { return }
             
-            // Prevent fullscreen JavaScript
-            document.addEventListener('fullscreenchange', function(e) {
-                if (document.fullscreenElement) {
-                    document.exitFullscreen();
-                    console.log('Exited fullscreen mode');
-                }
-            }, false);
-            
-            // Disable all click events on the player
-            const playerElements = document.querySelectorAll('.vp-player, .vp-player *');
-            playerElements.forEach(function(element) {
-                element.addEventListener('click', function(e) {
-                    // Allow only video play/pause
-                    if (e.target.tagName.toLowerCase() === 'video') {
-                        return;
+            let script = """
+            (function() {
+                var iframe = document.querySelector('iframe');
+                if (iframe && iframe.contentWindow) {
+                    try {
+                        // Try to get current time and duration
+                        var message = { method: 'getCurrentTime' };
+                        iframe.contentWindow.postMessage(JSON.stringify(message), '*');
+                        
+                        message = { method: 'getDuration' };
+                        iframe.contentWindow.postMessage(JSON.stringify(message), '*');
+                        
+                        // Return placeholder values
+                        return { currentTime: 0, duration: 0 };
+                    } catch (e) {
+                        console.error('Error getting video progress:', e);
+                        return { error: e.toString() };
                     }
-                    e.stopPropagation();
-                    e.preventDefault();
-                    console.log('Blocked click event');
-                    return false;
-                }, true);
-            });
-        }, 1000);
-        """
+                }
+                return { error: 'No iframe found' };
+            })();
+            """
+            
+            webView.evaluateJavaScript(script) { _, _ in
+                // We don't use the result here as we rely on the message handler
+            }
+        }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            webView.evaluateJavaScript(cssScript) { _, error in
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            print("❌ WebView navigation failed: \(error.localizedDescription)")
+        }
+        
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            print("❌ WebView provisional navigation failed: \(error.localizedDescription)")
+        }
+        
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            print("✅ WebView navigation finished")
+            
+            // Setup message handler for video events
+            let script = """
+            window.addEventListener('message', function(event) {
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data.event === 'ready') {
+                        console.log('Vimeo player is ready');
+                    } else if (data.event === 'playProgress') {
+                        window.videoProgress = data.data.seconds / data.data.duration;
+                        window.videoDuration = data.data.duration;
+                    } else if (data.event === 'play') {
+                        window.isPlaying = true;
+                    } else if (data.event === 'pause') {
+                        window.isPlaying = false;
+                    }
+                } catch (e) {
+                    // Not JSON or other error
+                }
+            });
+            """
+            
+            webView.evaluateJavaScript(script) { _, error in
                 if let error = error {
-                    print("Error applying CSS: \(error.localizedDescription)")
-                } else {
-                    print("CSS applied successfully")
+                    print("Error setting up message handler: \(error.localizedDescription)")
                 }
             }
         }
         
-        // Additional script to ensure no fullscreen mode
-        let preventFullscreenScript = """
-        setTimeout(function() {
-            // Disable fullscreen API
-            const originalRequestFullscreen = Element.prototype.requestFullscreen;
-            Element.prototype.requestFullscreen = function() {
-                console.log('Fullscreen request blocked');
-                return;
-            };
+        func updateBindings() {
+            guard needsUpdate else { return }
             
-            // Find and disable fullscreen button
-            const fullscreenButtons = document.querySelectorAll('[aria-label*="full screen"], [title*="full screen"], .fullscreen-button, .vp-fullscreen');
-            fullscreenButtons.forEach(function(button) {
-                button.style.display = 'none';
-                button.style.visibility = 'hidden';
-                button.disabled = true;
-                button.setAttribute('aria-hidden', 'true');
-                button.remove();
-            });
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                if abs(self.parent.videoProgress - self.tempProgress) > 0.01 && !self.isDragging {
+                    self.parent.videoProgress = self.tempProgress
+                }
+                
+                if self.tempDuration > 0 && abs(self.parent.videoDuration - self.tempDuration) > 0.1 {
+                    self.parent.videoDuration = self.tempDuration
+                }
+                
+                if self.parent.isPlaying != self.tempIsPlaying {
+                    self.parent.isPlaying = self.tempIsPlaying
+                }
+                
+                self.needsUpdate = false
+            }
+        }
+    }
+    
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        print("Loading video with URL: \(urlString)")
+        
+        // Check if isPlaying changed and update the video
+        if context.coordinator.tempIsPlaying != isPlaying {
+            context.coordinator.tempIsPlaying = isPlaying
             
-            // Block all touch events that might trigger fullscreen
-            document.addEventListener('touchstart', function(e) {
-                if (e.target.closest('.vp-controls, .vp-player')) {
-                    if (e.target.tagName.toLowerCase() !== 'video') {
-                        e.stopPropagation();
+            let playPauseScript = isPlaying ? 
+                "var iframe = document.querySelector('iframe'); if (iframe && iframe.contentWindow) { iframe.contentWindow.postMessage('{\"method\":\"play\"}', '*'); }" :
+                "var iframe = document.querySelector('iframe'); if (iframe && iframe.contentWindow) { iframe.contentWindow.postMessage('{\"method\":\"pause\"}', '*'); }"
+            
+            webView.evaluateJavaScript(playPauseScript) { _, error in
+                if let error = error {
+                    print("Error controlling playback: \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        // Use the direct embed code from Vimeo with API support
+        let html = """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+            <style>
+                body, html {
+                    margin: 0;
+                    padding: 0;
+                    height: 100%;
+                    width: 100%;
+                    background-color: #000000;
+                    overflow: hidden;
+                }
+                div {
+                    position: relative;
+                    padding: 177.78% 0 0 0;
+                }
+                iframe {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                }
+            </style>
+        </head>
+        <body>
+            <div>
+                <iframe src="\(urlString)?badge=0&autopause=0&player_id=0&app_id=58479&autoplay=1&muted=0&controls=0&title=0&byline=0&portrait=0&api=1"
+                        frameborder="0"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowfullscreen>
+                </iframe>
+            </div>
+            
+            <script src="https://player.vimeo.com/api/player.js"></script>
+            <script>
+                // Log when the page loads
+                window.onload = function() {
+                    console.log('HTML page loaded');
+                    setupVimeoPlayer();
+                };
+                
+                // Setup Vimeo player with API
+                function setupVimeoPlayer() {
+                    try {
+                        var iframe = document.querySelector('iframe');
+                        if (iframe) {
+                            console.log('Iframe found with src: ' + iframe.src);
+                            
+                            // Initialize Vimeo player
+                            var player = new Vimeo.Player(iframe);
+                            
+                            // Set up event listeners
+                            player.on('play', function() {
+                                console.log('Video is playing');
+                                window.isPlaying = true;
+                            });
+                            
+                            player.on('pause', function() {
+                                console.log('Video is paused');
+                                window.isPlaying = false;
+                            });
+                            
+                            player.on('timeupdate', function(data) {
+                                window.videoProgress = data.percent;
+                                window.videoDuration = data.duration;
+                            });
+                            
+                            player.on('loaded', function() {
+                                console.log('Video loaded');
+                                player.getDuration().then(function(duration) {
+                                    console.log('Video duration: ' + duration);
+                                    window.videoDuration = duration;
+                                });
+                            });
+                            
+                            // Store player in window for external access
+                            window.vimeoPlayer = player;
+                        }
+                    } catch (e) {
+                        console.error('Error setting up Vimeo player:', e);
                     }
                 }
-            }, true);
-        }, 1500);
+                
+                // Log any errors
+                window.onerror = function(message, source, lineno, colno, error) {
+                    console.log('Error: ' + message);
+                    return true;
+                };
+                
+                // Function to seek to a specific time
+                window.seekTo = function(seconds) {
+                    if (window.vimeoPlayer) {
+                        window.vimeoPlayer.setCurrentTime(seconds);
+                    }
+                };
+                
+                // Function to play/pause
+                window.togglePlayPause = function(shouldPlay) {
+                    if (window.vimeoPlayer) {
+                        if (shouldPlay) {
+                            window.vimeoPlayer.play();
+                        } else {
+                            window.vimeoPlayer.pause();
+                        }
+                    }
+                };
+            </script>
+        </body>
+        </html>
         """
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            webView.evaluateJavaScript(preventFullscreenScript) { _, error in
+        // Only load the HTML if it's not already loaded
+        if webView.url == nil {
+            webView.loadHTMLString(html, baseURL: URL(string: "https://player.vimeo.com"))
+        }
+        
+        // Check if progress was changed by user (through the slider)
+        if context.coordinator.tempProgress != videoProgress {
+            context.coordinator.tempProgress = videoProgress
+            let seekScript = "window.seekTo(\(videoProgress * videoDuration));"
+            webView.evaluateJavaScript(seekScript) { _, error in
                 if let error = error {
-                    print("Error applying fullscreen prevention: \(error.localizedDescription)")
-                } else {
-                    print("Fullscreen prevention applied")
+                    print("Error seeking video: \(error.localizedDescription)")
+                }
+            }
+        }
+        
+        // Periodically update progress
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            let progressScript = """
+            (function() {
+                if (window.vimeoPlayer) {
+                    var progress = { currentTime: 0, duration: 0 };
+                    window.vimeoPlayer.getCurrentTime().then(function(seconds) {
+                        progress.currentTime = seconds;
+                        window.vimeoPlayer.getDuration().then(function(duration) {
+                            progress.duration = duration;
+                            window.videoProgress = progress.currentTime / progress.duration;
+                            window.videoDuration = progress.duration;
+                        });
+                    });
+                }
+                return { 
+                    progress: window.videoProgress || 0, 
+                    duration: window.videoDuration || 0,
+                    isPlaying: window.isPlaying === true
+                };
+            })();
+            """
+            
+            webView.evaluateJavaScript(progressScript) { result, error in
+                if let error = error {
+                    print("Error getting progress: \(error.localizedDescription)")
+                    return
+                }
+                
+                if let result = result as? [String: Any],
+                   let progress = result["progress"] as? Double,
+                   let duration = result["duration"] as? Double,
+                   let isPlaying = result["isPlaying"] as? Bool {
+                    
+                    context.coordinator.tempProgress = progress
+                    context.coordinator.tempDuration = duration
+                    context.coordinator.tempIsPlaying = isPlaying
+                    context.coordinator.needsUpdate = true
+                    
+                    context.coordinator.updateBindings()
                 }
             }
         }

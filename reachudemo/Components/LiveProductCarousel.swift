@@ -19,6 +19,7 @@ struct LiveProductCarousel: View {
                                 .onTapGesture {
                                     onProductTap(products[index])
                                 }
+                                .padding(.bottom, 30)
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -31,15 +32,15 @@ struct LiveProductCarousel: View {
                                 .frame(width: 8, height: 8)
                         }
                     }
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 16)
                 }
-                .frame(height: 140)
+                .frame(height: 160)
                 .background(Color.clear) // Carrusel con fondo transparente
                 .cornerRadius(16)
                 .padding(.horizontal, 16)
             }
         }
-        .frame(height: 140)
+        .frame(height: 160)
     }
     
     private func productCard(for product: ReachuProduct, width: CGFloat) -> some View {
