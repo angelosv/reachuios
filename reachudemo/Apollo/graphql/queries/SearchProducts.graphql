@@ -1,0 +1,24 @@
+query SearchProducts($searchTerm: String!, $limit: Int, $offset: Int) {
+  Channel {
+    SearchProducts(query: $searchTerm, limit: $limit, offset: $offset) {
+      id
+      title
+      description
+      images {
+        id
+        url
+        order
+      }
+      price {
+        currency_code
+        amount
+        compare_at
+      }
+      category
+      inventory {
+        available
+        in_stock
+      }
+    }
+  }
+} 

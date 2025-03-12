@@ -1,0 +1,1875 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+type Query {
+  "Entry point for querying products, categories, suppliers, and related entities."
+  Channel: ProductsQueries!
+  "Entry point for cart-related queries."
+  Cart: CartQueries!
+  "Provides access to all checkout-related queries, such as retrieving checkout details."
+  Checkout: CheckoutQueries!
+  "Provides access to payment-related queries."
+  Payment: PaymentQueries!
+  "Entry point for discount-related queries."
+  Discounts: DiscountsQueries!
+  "Entry point for markets-related queries."
+  Markets: MarketsQueries!
+}
+type ProductsQueries {
+  "Fetches a list of products based on the provided filters and context."
+  GetProducts(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "Customer session ID associated with the products query."
+    customerSessionId: String = "",
+    "Indicates whether to use cached data for the products query."
+    useCache: Boolean! = true
+  ): [Product!]!
+  "Fetches products by SKU list or other identifiers."
+  Products(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "List of product IDs to filter products."
+    product_ids: [Int!]! = [],
+    "List of category IDs to filter products."
+    category_ids: [Int!]! = [],
+    "List of SKUs to filter products."
+    sku_list: [String!]! = [],
+    "List of barcodes to filter products."
+    barcode_list: [String!]! = [],
+    "Indicates whether to use cached data for the query."
+    useCache: Boolean! = true,
+    "Customer session ID for additional context in the query."
+    customerSessionId: String = ""
+  ): [Product!]!
+  "Fetches paginated product data with optional filters and sorting."
+  ProductsPagination(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "Number of products to fetch in the query."
+    first: Int = 10,
+    "Cursor to fetch products after a specific point."
+    after: String,
+    "Filters to apply on the products query."
+    filters: ProductsFiltersArgs,
+    "Customer session ID for context in the pagination query."
+    customerSessionId: String = ""
+  ): ProductPagination!
+  "Fetches products by category ID."
+  GetProductsByCategory(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "Unique identifier of the category to fetch products from."
+    categoryId: Int! = 0,
+    "Customer session ID associated with the products query."
+    customerSessionId: String = "",
+    "Indicates whether to use cached data for the products query."
+    useCache: Boolean! = true
+  ): [Product!]!
+  "Fetches products by multiple category IDs."
+  GetProductsByCategories(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "List of category IDs to fetch products from."
+    categoryIds: [Int!]! = [],
+    "Customer session ID associated with the products query."
+    customerSessionId: String = "",
+    "Indicates whether to use cached data for the products query."
+    useCache: Boolean! = true
+  ): [Product!]!
+  "Fetches a single product by its ID."
+  GetProduct(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "Stock Keeping Unit (SKU) of the product."
+    sku: String,
+    "Barcode of the product."
+    barcode: String,
+    "Unique identifier of the product."
+    product_id: Int! = 0,
+    "Customer session ID associated with the product query."
+    customerSessionId: String = "",
+    "Indicates whether to use cached data for the product query."
+    useCache: Boolean! = true
+  ): Product!
+  "Fetches multiple products by their IDs."
+  GetProductsByIds(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "List of product IDs to fetch."
+    product_ids: [Int!]! = [],
+    "Indicates whether to use cached data for the products query."
+    useCache: Boolean! = true,
+    "Customer session ID associated with the products query."
+    customerSessionId: String = ""
+  ): [Product!]!
+  "Fetches products by their SKUs."
+  GetProductBySKUs(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "Stock Keeping Unit (SKU) of the product to fetch."
+    sku: String!,
+    "Unique identifier of the product."
+    product_id: Int,
+    "Customer session ID associated with the product query."
+    customerSessionId: String = "",
+    "Indicates whether to use cached data for the product query."
+    useCache: Boolean! = true
+  ): [Product!]!
+  "Fetches products by their barcodes."
+  GetProductByBarcodes(
+    """
+    Currency code in ISO 4217 format (e.g., "USD", "EUR").
+    """
+    currency: String = "",
+    "The size of the image to be returned."
+    image_size: ImageSize = large,
+    """
+    ISO code of the shipping country (e.g., "US", "GB").
+    """
+    shipping_country_code: String = "",
+    "Barcode of the product to fetch."
+    barcode: String!,
+    "Unique identifier of the product."
+    product_id: Int,
+    "Customer session ID associated with the product query."
+    customerSessionId: String = "",
+    "Indicates whether to use cached data for the product query."
+    useCache: Boolean! = true
+  ): [Product!]!
+  "Fetches all available product categories."
+  GetCategories: [GetCategoryDTO!]!
+  "Fetches available markets for the channel."
+  GetAvailableMarkets: [GetAvailableMarketsDTO!]!
+  "Fetches purchase conditions for products."
+  GetPurchaseConditions: GetPurchaseConditionsDTO!
+  "Fetches terms and conditions for the channel."
+  GetTermsAndConditions: GetTermsAndConditionsDTO!
+  "Fetches all available channels for the user."
+  GetChannels: [GetChannelsDTO!]!
+  "Fetches products along with their taxed prices."
+  GetTaxedPrices(
+    "Currency code (ISO 4217) for the prices."
+    currency: String = "",
+    "List of product IDs for which to calculate taxed prices."
+    product_ids: [Int!]! = [],
+    "Country code (ISO 3166-1 alpha-2) of the shipping destination."
+    shipping_country_code: String = "",
+    "Customer session ID for context in the calculation."
+    customerSessionId: String = ""
+  ): [ProductsAndTaxes!]!
+  "Fetches suppliers based on provided filters."
+  GetSuppliers(
+    "List of supplier IDs to fetch."
+    supplier_ids: [Int!]! = []
+  ): [GetSuppliersDTO!]!
+  "Fetches suppliers by shipping country."
+  GetSuppliersByShippingCountry(
+    "List of shipping country codes to filter suppliers by."
+    shipping_country: [String!]! = []
+  ): [GetSuppliersByShippingCountryDTO!]!
+}
+type Product {
+  "Unique identifier for the product."
+  id: Int!
+  "Title of the product."
+  title: String!
+  "Brand of the product."
+  brand: String
+  "Description of the product."
+  description: String
+  "Tags associated with the product."
+  tags: String!
+  "SKU of the product."
+  sku: String!
+  "Available quantity of the product."
+  quantity: Int
+  "Pricing details of the product."
+  price: Price!
+  "List of variants available for the product."
+  variants: [Variant!]!
+  "Barcode of the product."
+  barcode: String
+  "Product options such as size or color."
+  options: [Option!]!
+  "Categories associated with the product."
+  categories: [Category!]
+  "List of images for the product."
+  images: [Image!]!
+  "Shipping options available for the product."
+  product_shipping: [ProductShipping!]
+  "Supplier of the product."
+  supplier: String!
+  "Unique identifier for the supplier of the product."
+  supplier_id: Int
+  "Indicates if the product is imported."
+  imported_product: Boolean
+  "Referral fee associated with the product."
+  referral_fee: Int
+  "Indicates if product options are enabled."
+  options_enabled: Boolean!
+  "Indicates if the product is digital."
+  digital: Boolean!
+  "Origin for the product."
+  origin: String!
+  "Return information for the product."
+  return: ReturnInfo
+}
+type Price {
+  "Base amount of the price."
+  amount: Float!
+  """
+  Currency code in ISO 4217 format (e.g., "USD", "EUR").
+  """
+  currency_code: String!
+  "Total amount including taxes."
+  amount_incl_taxes: Float
+  "Tax amount applied to the base price."
+  tax_amount: Float
+  "Tax rate applied to the price."
+  tax_rate: Float
+  "Comparison price for the product."
+  compare_at: Float
+  "Comparison price including taxes."
+  compare_at_incl_taxes: Float
+}
+type Variant {
+  "Unique identifier for the variant."
+  id: ID!
+  "Barcode of the variant."
+  barcode: String
+  "Pricing information for the variant."
+  price: Price!
+  "Available quantity of the variant."
+  quantity: Int
+  "Stock Keeping Unit (SKU) of the variant."
+  sku: String!
+  "Title of the variant."
+  title: String!
+  "List of images associated with the variant."
+  images: [Image!]!
+}
+type Image {
+  "Unique identifier for the image."
+  id: ID!
+  "URL of the image."
+  url: String!
+  "Width of the image."
+  width: Int
+  "Height of the image."
+  height: Int
+  "Order in which the image is displayed."
+  order: Int!
+}
+type Option {
+  "Unique identifier for the option."
+  id: ID!
+  "Name of the option (e.g., size, color)."
+  name: String!
+  "Order of the option in the product."
+  order: Int!
+  "Values available for the option."
+  values: String!
+}
+type Category {
+  "Unique identifier for the category."
+  id: Int!
+  "Name of the category."
+  name: String!
+}
+type ProductShipping {
+  "Unique identifier for the shipping option."
+  id: ID!
+  "Name of the shipping option."
+  name: String!
+  "Description of the shipping option."
+  description: String
+  "Indicates whether custom pricing is enabled for the shipping option."
+  custom_price_enabled: Boolean!
+  "Indicates whether this is the default shipping option."
+  default: Boolean!
+  "List of countries supported by the shipping option."
+  shipping_country: [ShippingCountry!]
+}
+type ShippingCountry {
+  "Unique identifier for the shipping country."
+  id: ID!
+  "Country name of the shipping destination."
+  country: String!
+  "Pricing details for shipping to the country."
+  price: BasePrice!
+}
+type BasePrice {
+  "Base amount of the price."
+  amount: Float!
+  """
+  Currency code in ISO 4217 format (e.g., "USD", "EUR").
+  """
+  currency_code: String!
+  "Total amount including taxes."
+  amount_incl_taxes: Float
+  "Tax amount applied to the base price."
+  tax_amount: Float
+  "Tax rate applied to the price."
+  tax_rate: Float
+}
+type ReturnInfo {
+  "Indicates whether the product has a return right."
+  return_right: Boolean
+  "Return label details for the product."
+  return_label: String
+  "Cost of returning the product."
+  return_cost: Float
+  "Supplier-specific return policy details."
+  supplier_policy: String
+  "Return address details for the product."
+  return_address: ReturnAddress
+}
+type ReturnAddress {
+  "Indicates whether the return address is the same as the business address."
+  same_as_business: Boolean
+  "Indicates whether the return address is the same as the warehouse address."
+  same_as_warehouse: Boolean
+  "Country of the return address."
+  country: String
+  "Timezone of the return address."
+  timezone: String
+  "Primary return address line."
+  address: String
+  "Secondary return address line."
+  address_2: String
+  "Postal code of the return address."
+  post_code: String
+  "City of the return address."
+  return_city: String
+}
+type ProductPagination {
+  "List of product edges for the current page."
+  edges: [ProductEdge!]!
+  "Information about pagination for the product list."
+  page_info: PageInfo!
+  "Total count of products in the list."
+  total_count: Int!
+}
+type ProductEdge {
+  "The product node in the current edge."
+  node: Product!
+  "Cursor for the current product edge."
+  cursor: String!
+}
+type PageInfo {
+  "Indicates whether there is a next page of products."
+  has_next_page: Boolean!
+  "Indicates whether there is a previous page of products."
+  has_previous_page: Boolean!
+  "Cursor for the start of the current page."
+  start_cursor: String
+  "Cursor for the end of the current page."
+  end_cursor: String
+}
+type GetCategoryDTO {
+  "Unique identifier of the category."
+  id: Int
+  "Name of the category."
+  name: String
+  "Identifier of the parent category, if applicable."
+  father_category_id: Int
+  "URL of the category image."
+  category_image: String
+}
+type GetAvailableMarketsDTO {
+  "Name of the market."
+  name: String
+  "Official name of the market."
+  official: String
+  "Code of the market (ISO 3166-1 alpha-2 or alpha-3)."
+  code: String
+  "URL or identifier for the flag representing the market."
+  flag: String
+  "International phone code associated with the market."
+  phone_code: String
+  "Currency details for the market."
+  currency: currencyDTO
+  "Administrative division details associated with the market."
+  administrative_division: administrative_division
+}
+type currencyDTO {
+  """
+  Currency code in ISO 4217 format (e.g., "USD").
+  """
+  code: String
+  "Name of the currency."
+  name: String
+  "Symbol of the currency."
+  symbol: String
+}
+type Country {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of counties or subdivisions in the country."
+  values: [CountyCountry!]!
+}
+type CountyCountry {
+  "Value representing a specific county or administrative unit."
+  value: String
+  "Indicates if this is the last level in the administrative hierarchy."
+  last_level: Boolean
+  "Next administrative level within the hierarchy."
+  next_level: County
+}
+type County {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of values representing counties in the administrative division."
+  values: [CountyValue!]!
+}
+type CountyValue {
+  "Value representing counties in the administrative division."
+  value: String
+}
+type Province {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of values representing provinces in the administrative division."
+  values: [ProvinceValue!]!
+}
+type ProvinceValue {
+  "Value of values representing provinces in the administrative division."
+  value: String
+}
+type GetPurchaseConditionsDTO {
+  "Headline of the purchase conditions."
+  headline: String
+  "Lead text or introductory section of the purchase conditions."
+  lead: String
+  "Last updated date of the purchase conditions."
+  updated: String
+  "Content elements of the purchase conditions."
+  content: [ContentElement!]
+}
+type ContentElement {
+  "Type of the content element (e.g., Paragraph, Heading)."
+  type: String
+  "Attributes for the content element, relevant for headings."
+  attrs: AttrContentElement
+  "List of text elements within the content element."
+  content: [TextElement!]
+}
+type AttrContentElement {
+  "The level of the content element, applicable to headings."
+  level: Int
+}
+type TextElement {
+  "Type of the text element (e.g., plain text)."
+  type: String
+  "Text content of the element."
+  text: String
+  "List of link marks applied to the text element."
+  marks: [LinkMark!]
+}
+type LinkMark {
+  "Type of the link mark."
+  type: String
+  "Attributes of the link mark."
+  attrs: AttrLinkMark
+}
+type AttrLinkMark {
+  "Hyperlink reference (href) for the link mark."
+  href: String
+  """
+  Target attribute of the link mark (e.g., "_blank").
+  """
+  target: String
+  "Type of the link mark (e.g., internal, external)."
+  linktype: String
+}
+type GetTermsAndConditionsDTO {
+  "Headline of the terms and conditions."
+  headline: String
+  "Lead or introductory text for the terms and conditions."
+  lead: String
+  "Last updated date for the terms and conditions."
+  updated: String
+  "Content elements of the terms and conditions."
+  content: [ContentElementTAC!]
+}
+type ContentElementTAC {
+  "Type of the content element, e.g., Paragraph or Heading."
+  type: String
+  "Attributes of the content element, applicable to headings."
+  attrs: AttrContentElementTAC
+  "Array of text elements within the content."
+  content: [TextElementTAC!]
+}
+type AttrContentElementTAC {
+  "Level attribute for content, applies to headings."
+  level: Int
+}
+type TextElementTAC {
+  "Type of the text element, e.g., plain text."
+  type: String
+  "Text content of the element."
+  text: String
+  "Array of link marks applied to the text element."
+  marks: [LinkMarkTAC!]
+}
+type LinkMarkTAC {
+  "Type of the link mark."
+  type: String
+  "Attributes of the link mark."
+  attrs: AttrLinkMarkTAC
+}
+type AttrLinkMarkTAC {
+  "Hyperlink reference (href) of the link mark."
+  href: String
+  """
+  Target attribute of the link, e.g., "_blank".
+  """
+  target: String
+  "Type of the link, e.g., internal or external."
+  linktype: String
+}
+type GetChannelsDTO {
+  "Unique identifier of the channel."
+  channel: String!
+  "Name of the channel."
+  name: String!
+  "Unique identifier for the channel."
+  id: Int!
+  "API key associated with the channel."
+  api_key: String
+  "Settings configuration for the channel."
+  settings: settingsChennelDTO!
+}
+type settingsChennelDTO {
+  "Indicates whether Stripe payment link is enabled for the channel."
+  stripe_payment_link: Boolean!
+  "Indicates whether Stripe payment intent is enabled for the channel."
+  stripe_payment_intent: Boolean!
+  "Indicates whether Klarna payment option is enabled for the channel."
+  klarna: Boolean!
+  "List of markets associated with the channel."
+  markets: [String!]!
+  "Indicates whether purchase conditions are required for the channel."
+  purchase_conditions: Boolean!
+}
+type ProductsAndTaxes {
+  "Unique identifier for the product."
+  id: Int!
+  "Title of the product."
+  title: String!
+  "Brand of the product."
+  brand: String
+  "Description of the product."
+  description: String
+  "Tags associated with the product."
+  tags: String!
+  "SKU of the product."
+  sku: String!
+  "Available quantity of the product."
+  quantity: Int
+  "Pricing details of the product."
+  price: Price!
+  "List of variants available for the product."
+  variants: [Variant!]!
+  "Barcode of the product."
+  barcode: String
+  "Product options such as size or color."
+  options: [Option!]!
+  "Categories associated with the product."
+  categories: [Category!]
+  "List of images for the product."
+  images: [Image!]!
+  "Shipping options available for the product."
+  product_shipping: [ProductShipping!]
+  "Supplier of the product."
+  supplier: String!
+  "Unique identifier for the supplier of the product."
+  supplier_id: Int
+  "Indicates if the product is imported."
+  imported_product: Boolean
+  "Referral fee associated with the product."
+  referral_fee: Int
+  "Indicates if product options are enabled."
+  options_enabled: Boolean!
+  "Indicates if the product is digital."
+  digital: Boolean!
+  "Origin for the product."
+  origin: String!
+  "Return information for the product."
+  return: ReturnInfo
+  taxes: [Taxes!]
+}
+type Taxes {
+  country: String
+  tax: [Tax!]
+}
+type Tax {
+  name: String
+  value: Float
+  amount: Float
+}
+type GetSuppliersDTO {
+  "Unique identifier of the supplier."
+  id: Int
+  "Username of the supplier."
+  username: String
+  "First name of the supplier."
+  name: String
+  "Surname of the supplier."
+  surname: String
+  "Phone number of the supplier."
+  phone: String
+  "Address of the supplier."
+  address: String
+  "Avatar or profile image URL of the supplier."
+  avatar: String
+  "Brand name associated with the supplier."
+  brand_name: String
+}
+type GetSuppliersByShippingCountryDTO {
+  "Unique identifier of the supplier."
+  id: Int
+  "Username of the supplier."
+  username: String
+  "First name of the supplier."
+  name: String
+  "Surname of the supplier."
+  surname: String
+  "Phone number of the supplier."
+  phone: String
+  "Address of the supplier."
+  address: String
+  "Avatar or profile image URL of the supplier."
+  avatar: String
+  "Brand name associated with the supplier."
+  brand_name: String
+}
+type CartQueries {
+  "Fetches the details of a specific cart by its ID."
+  GetCart(
+    "Unique identifier of the cart."
+    cart_id: String!
+  ): GetCartDTO!
+  "Retrieves line items grouped by supplier for the specified cart."
+  GetLineItemsBySupplier(
+    "Unique identifier of the cart."
+    cart_id: String!
+  ): [GetLineItemsBySupplierDTO!]!
+}
+type GetCartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type LineItemDTO {
+  "Unique identifier for the line item."
+  id: String!
+  "Supplier of the line item."
+  supplier: String!
+  "List of images associated with the line item."
+  image: [ProductImageDTO!]
+  "Stock Keeping Unit (SKU) of the line item."
+  sku: String
+  "Barcode of the line item."
+  barcode: String
+  "Brand of the line item."
+  brand: String
+  "Unique identifier of the product."
+  product_id: Int!
+  "Title of the product."
+  title: String
+  "Variant identifier for the product."
+  variant_id: Int
+  "Title of the product variant."
+  variant_title: String
+  "List of variant options for the product."
+  variant: [VariantOptionDTO!]!
+  "Quantity of the line item."
+  quantity: Int!
+  "Price details for the line item."
+  price: PriceDataDTO!
+  "Shipping details for the line item."
+  shipping: ShippingDTO
+  "List of available shipping options for the line item."
+  available_shippings: [LineItemAvailableShippingDTO!]
+}
+type ProductImageDTO {
+  "Unique identifier of the product image."
+  id: ID!
+  "URL of the product image."
+  url: String!
+  "Width of the product image."
+  width: Int
+  "Height of the product image."
+  height: Int
+}
+type VariantOptionDTO {
+  "Option name for the variant."
+  option: String!
+  "Option value for the variant."
+  value: String!
+}
+type PriceDataDTO {
+  "Price amount."
+  amount: Float!
+  "Currency code for the price (ISO 4217)."
+  currency_code: String!
+  "Discount applied to the price."
+  discount: Float
+  "Price for comparison, usually the original price."
+  compare_at: Float
+  "Comparison price including taxes."
+  compare_at_incl_taxes: Float
+  "Price amount including taxes."
+  amount_incl_taxes: Float
+  "Tax amount for the price."
+  tax_amount: Float
+  "Tax rate applied to the price."
+  tax_rate: Float
+}
+type ShippingDTO {
+  "Identifier of the shipping method."
+  id: String!
+  "Name of the shipping method."
+  name: String!
+  "Description of the shipping method."
+  description: String
+  "Price details for the shipping method."
+  price: ShippingPriceDTO!
+}
+type ShippingPriceDTO {
+  "Price amount for shipping."
+  amount: Float!
+  "Currency code for the shipping price (ISO 4217)."
+  currency_code: String!
+  "Shipping price including taxes."
+  amount_incl_taxes: Float
+  "Tax amount for shipping."
+  tax_amount: Float
+  "Tax rate applied to the shipping."
+  tax_rate: Float
+}
+type LineItemAvailableShippingDTO {
+  "Unique identifier of the shipping option."
+  id: String
+  "Name of the shipping option."
+  name: String
+  "Description of the shipping option."
+  description: String
+  "ISO code of the country for the shipping option."
+  country_code: String
+  "Price details for the available shipping option."
+  price: PriceLineItemAvailableShippingDTO!
+}
+type PriceLineItemAvailableShippingDTO {
+  "The total amount for the shipping option."
+  amount: Float
+  "Currency code for the shipping price (ISO 4217)."
+  currency_code: String
+  "Total amount for the shipping option, including taxes."
+  amount_incl_taxes: Float
+  "Tax amount applied to the shipping option."
+  tax_amount: Float
+  "Tax rate applied to the shipping option."
+  tax_rate: Float
+}
+type GetLineItemsBySupplierDTO {
+  "Supplier details for the line items grouped by supplier."
+  supplier: SupplierLineItemsBySupplierDTO
+  "Available shipping options grouped by supplier."
+  available_shippings: [LineItemAvailableShippingDTO!]
+  "List of line items grouped by supplier."
+  line_items: [LineItemDTO!]!
+}
+type SupplierLineItemsBySupplierDTO {
+  "Unique identifier of the supplier."
+  id: Int
+  "Name of the supplier."
+  name: String
+}
+type CheckoutQueries {
+  "Retrieves detailed information about a specific checkout using the provided checkout ID."
+  GetCheckout(
+    "Unique identifier for the checkout."
+    checkout_id: String!
+  ): GetCheckoutDTO!
+}
+type GetCheckoutDTO {
+  "Indicates if the buyer accepts purchase conditions."
+  buyer_accepts_purchase_conditions: Boolean
+  "Indicates if the buyer accepts terms and conditions."
+  buyer_accepts_terms_conditions: Boolean
+  "Timestamp of when the checkout was created."
+  created_at: String!
+  "Timestamp of the last update to the checkout."
+  updated_at: String!
+  "Unique identifier for the checkout."
+  id: String!
+  "Timestamp of when the checkout was deleted."
+  deleted_at: String
+  "URL to redirect the user upon successful payment."
+  success_url: String
+  "URL to redirect the user if payment is canceled."
+  cancel_url: String
+  "Payment method chosen for the checkout."
+  payment_method: String
+  "Email address associated with the checkout."
+  email: String
+  "Status of the checkout."
+  status: String!
+  "URL for the checkout session."
+  checkout_url: String
+  "Original payment ID associated with the checkout."
+  origin_payment_id: String
+  "Billing address associated with the checkout."
+  billing_address: AddressDTO
+  "Shipping address associated with the checkout."
+  shipping_address: AddressDTO
+  "List of available payment methods for the checkout."
+  available_payment_methods: [AvailablePaymentMethodDTO!]
+  "Discount code applied to the checkout."
+  discount_code: String
+  "Details of the cart associated with the checkout."
+  cart: CartDTO!
+  "Total amounts and details of the checkout."
+  totals: TotalsDTO!
+}
+type AddressDTO {
+  "Unique identifier for the address."
+  id: String!
+  "First name of the address owner."
+  first_name: String
+  "Last name of the address owner."
+  last_name: String
+  "Country phone code associated with the address."
+  phone_code: String
+  "Phone number of the address owner."
+  phone: String
+  "Company name associated with the address."
+  company: String
+  "Primary address line."
+  address1: String
+  "Secondary address line."
+  address2: String
+  "City of the address."
+  city: String
+  "Province or state of the address."
+  province: String
+  "Code of the province or state."
+  province_code: String
+  "Country of the address."
+  country: String
+  "ISO code of the country."
+  country_code: String
+  "Postal or ZIP code of the address."
+  zip: String
+}
+type AvailablePaymentMethodDTO {
+  "Name of the available payment method."
+  name: String!
+}
+type CartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type TotalsDTO {
+  "Currency code in ISO 4217 format."
+  currency_code: String
+  "Subtotal of the order."
+  subtotal: Float
+  "Shipping cost for the order."
+  shipping: Float
+  "Total cost of the order."
+  total: Float
+  "Taxes applied to the order."
+  taxes: Float
+  "Tax rate applied to the order."
+  tax_rate: Float
+  "Total discounts applied to the order."
+  discounts: Float
+}
+type PaymentQueries {
+  "Retrieves a list of available payment methods for the current user and channel."
+  GetAvailablePaymentMethods: [GetAvailablePaymentMethodsDTO!]!
+}
+type GetAvailablePaymentMethodsDTO {
+  "Name of the available payment method."
+  name: String!
+}
+type DiscountsQueries {
+  "Retrieves a list of all available discounts."
+  GetDiscounts: [GetDiscountsDTO!]!
+  "Fetches details of a specific discount by its ID."
+  GetDiscountsById(
+    "Unique identifier of the discount to be deleted."
+    discount_id: Int!
+  ): GetDiscountByIdDTO!
+  "Retrieves the types of discounts available."
+  GetDiscountType(
+    "Type of the discount to be retrieved."
+    type: String = "",
+    "Unique identifier of the discount type to be retrieved."
+    id: Int = 0
+  ): [GetDiscountTypeDTO!]!
+}
+type GetDiscountsDTO {
+  "Unique identifier of the discount."
+  id: Int!
+  "Number of discounts applied."
+  discount_count: Int
+  "Code representing the discount."
+  code: String
+  "Percentage value of the discount."
+  percentage: Int
+  "Start date of the discount."
+  start_date: String
+  "End date of the discount."
+  end_date: String
+  "Details of the discount type."
+  discount_type: DiscountTypeDTO
+  "List of products associated with the discount."
+  discount_product: [DiscountProductDTO!]
+  "Metadata associated with the discount."
+  discount_metadata: DiscountMetadataDTO
+}
+type DiscountTypeDTO {
+  "Unique identifier of the discount type."
+  id: Int
+  "Name or type of the discount."
+  type: String
+}
+type DiscountProductDTO {
+  "Unique identifier of the discount product."
+  id: Int!
+  "Details of the product associated with the discount."
+  product: DiscountProductOnlyDTO
+}
+type DiscountProductOnlyDTO {
+  "Unique identifier of the product."
+  id: Int!
+  "Title of the product."
+  title: String
+  "Stock Keeping Unit (SKU) of the product."
+  sku: String
+  "Revenue generated by the product."
+  revenue: Float
+}
+type DiscountMetadataDTO {
+  "Unique identifier of the channel user."
+  channelUserId: Int
+  "API key associated with the channel user."
+  apiKey: String
+}
+type GetDiscountByIdDTO {
+  "Unique identifier of the discount."
+  id: Int!
+  "Number of discounts applied."
+  discount_count: Int
+  "Code representing the discount."
+  code: String
+  "Percentage value of the discount."
+  percentage: Int
+  "Start date of the discount."
+  start_date: String
+  "End date of the discount."
+  end_date: String
+  "Details of the discount type."
+  discount_type: DiscountTypeDTO
+  "List of products associated with the discount."
+  discount_product: [DiscountProductDTO!]
+  "Metadata associated with the discount."
+  discount_metadata: DiscountMetadataDTO
+}
+type GetDiscountTypeDTO {
+  "Unique identifier of the discount type."
+  id: Int!
+  "Name or type of the discount."
+  type: String!
+}
+type MarketsQueries {
+  "Fetches a list of available global markets for the authenticated user."
+  GetAvailableMarkets: [GetAvailableGlobalMarketsDTO!]!
+}
+type GetAvailableGlobalMarketsDTO {
+  "Name of the global market."
+  name: String
+  "Official name of the global market."
+  official: String
+  "Code of the global market (ISO 3166-1 alpha-2 or alpha-3)."
+  code: String
+  "Flag representing the global market."
+  flag: String
+  "International phone code associated with the global market."
+  phone_code: String
+  "Currency details for the global market."
+  currency: currencyMarketsDTO
+  "Administrative division details associated with the global market."
+  administrative_division: administrative_division2
+}
+type currencyMarketsDTO {
+  "Currency code (ISO 4217 format)."
+  code: String
+  "Name of the currency."
+  name: String
+  "Symbol of the currency."
+  symbol: String
+}
+type CountryMarkets {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of counties or subdivisions within the country."
+  values: [CountyCountryMarkets!]!
+}
+type CountyCountryMarkets {
+  "Value representing a specific county or administrative unit."
+  value: String
+  "Indicates if this is the last level in the administrative hierarchy."
+  last_level: Boolean
+  "Next administrative level within the hierarchy."
+  next_level: CountyMarkets
+}
+type CountyMarkets {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of values representing counties in the administrative division."
+  values: [CountyValueMarkets!]!
+}
+type CountyValueMarkets {
+  "Value representing counties in the administrative division."
+  value: String
+}
+type ProvinceMarkets {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of values representing provinces in the administrative division."
+  values: [ProvinceValueMarkets!]!
+}
+type ProvinceValueMarkets {
+  "Value of values representing provinces in the administrative division."
+  value: String
+}
+type StateMarkets {
+  "Administrative level of the division."
+  level: Float
+  "Name of the administrative division."
+  name: String
+  "List of values representing states in the administrative division."
+  values: [StateValueMarkets!]!
+}
+type StateValueMarkets {
+  "Value of values representing states in the administrative division."
+  value: String
+}
+type Mutation {
+  "Entry point for product-related mutations, including cache invalidation for products."
+  Channel: ProductMutations!
+  "Entry point for cart-related mutations."
+  Cart: CartMutations!
+  "Entry point for Checkout mutations such as create, remove, and update operations."
+  Checkout: CheckoutMutations!
+  "Contains all available payment-related mutations, such as initializing payments with Klarna, Stripe and Vipps, or creating Stripe payment intents."
+  Payment: PaymentMutations!
+  "Entry point for discount-related mutations."
+  Discounts: DiscountsMutations!
+}
+type ProductMutations {
+  "Invalidate the product cache for specific channels to ensure updated data is retrieved."
+  RemoveProductsCache: RemoveProductsCacheArgsDTO!
+}
+type RemoveProductsCacheArgsDTO {
+  success: Boolean!
+}
+type CartMutations {
+  "Creates a new cart for the user."
+  CreateCart(
+    "Unique identifier for the customer session."
+    customer_session_id: String!,
+    "Currency in which the transactions will be performed (ISO 4217 format)."
+    currency: String!,
+    """
+    Country code (ISO 3166-1 alpha-2, e.g., "NO" for Norway, "EN" for England) to assign the shipping origin for the shopping cart.
+    """
+    shipping_country: String
+  ): CreateCartDTO!
+  "Adds an item to the specified cart."
+  AddItem(
+    "Unique identifier of the cart to which the item is being added."
+    cart_id: String!,
+    "List of items to be added to the cart."
+    line_items: [LineItemInput!]!
+  ): CreateItemToCartDTO!
+  "Deletes the specified cart."
+  DeleteCart(
+    "Unique identifier of the cart."
+    cart_id: String!
+  ): RemoveCartDTO!
+  "Deletes an item from the specified cart."
+  DeleteItem(
+    "Unique identifier of the cart."
+    cart_id: String!,
+    "Unique identifier of the item to be removed from the cart."
+    cart_item_id: String!
+  ): RemoveItemToCartDTO!
+  "Updates the details of the specified cart."
+  UpdateCart(
+    "Unique identifier of the cart."
+    cart_id: String!,
+    "Country code (ISO 3166-1 alpha-2) specifying the shipping destination."
+    shipping_country: String!
+  ): UpdateCartDTO!
+  "Updates the details of an item in the specified cart."
+  UpdateItem(
+    "Unique identifier of the cart."
+    cart_id: String!,
+    "Unique identifier of the item in the cart."
+    cart_item_id: String!,
+    "Unique identifier of the shipping method, required if quantity is not provided."
+    shipping_id: String,
+    "Quantity of the item to update, required if shipping_id is not provided."
+    qty: Int
+  ): UpdateItemToCartDTO!
+  "Updates the shipping details by supplier for the specified cart."
+  UpdateShippingsBySupplier(
+    "Unique identifier of the cart."
+    cart_id: String!,
+    "List of suppliers and their corresponding shipping methods to be updated."
+    data: [DataUpdateShippingsBySupplier!]!
+  ): UpdateShippingsBySupplierDTO!
+}
+type CreateCartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type CreateItemToCartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type RemoveCartDTO {
+  "Indicates if the cart was successfully removed."
+  success: Boolean!
+  "Message providing additional information about the operation result."
+  message: String!
+}
+type RemoveItemToCartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type UpdateCartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type UpdateItemToCartDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type UpdateShippingsBySupplierDTO {
+  "Unique identifier for the cart."
+  cart_id: String!
+  "Unique identifier for the customer session associated with the cart."
+  customer_session_id: String!
+  "ISO code of the shipping country for the cart."
+  shipping_country: String
+  "List of line items in the cart."
+  line_items: [LineItemDTO!]!
+  "Subtotal of the cart."
+  subtotal: Float
+  "Shipping cost for the cart."
+  shipping: Float
+  "Currency code for the cart (ISO 4217)."
+  currency: String!
+  "List of available shipping countries for the cart."
+  available_shipping_countries: [String!]!
+}
+type CheckoutMutations {
+  "Creates a new checkout using the provided cart ID."
+  CreateCheckout(
+    "Unique identifier for the cart associated with the checkout."
+    cart_id: String!
+  ): CreateCheckoutDTO!
+  "Removes an existing checkout identified by the checkout ID."
+  RemoveCheckout(
+    "Unique identifier for the checkout."
+    checkout_id: String!
+  ): RemoveCheckoutDTO!
+  "Updates checkout details such as shipping address, billing address, and other related information."
+  UpdateCheckout(
+    "Unique identifier for the checkout to be updated."
+    checkout_id: String!,
+    "Status of the checkout (e.g., pending, completed)."
+    status: String,
+    "Email address associated with the checkout."
+    email: String,
+    "URL to redirect the user upon successful payment."
+    success_url: String,
+    "URL to redirect the user if payment is canceled."
+    cancel_url: String,
+    "Payment method selected for the checkout."
+    payment_method: String,
+    "Shipping address for the checkout."
+    shipping_address: AddressArgs,
+    "Billing address for the checkout."
+    billing_address: AddressArgs,
+    "Indicates whether the buyer accepts the purchase conditions."
+    buyer_accepts_purchase_conditions: Boolean,
+    "Indicates whether the buyer accepts the terms and conditions."
+    buyer_accepts_terms_conditions: Boolean
+  ): UpdateCheckoutDTO!
+}
+type CreateCheckoutDTO {
+  "Indicates if the buyer accepts purchase conditions."
+  buyer_accepts_purchase_conditions: Boolean
+  "Indicates if the buyer accepts terms and conditions."
+  buyer_accepts_terms_conditions: Boolean
+  "Timestamp of when the checkout was created."
+  created_at: String!
+  "Timestamp of the last update to the checkout."
+  updated_at: String!
+  "Unique identifier for the checkout."
+  id: String!
+  "Timestamp of when the checkout was deleted."
+  deleted_at: String
+  "URL to redirect the user upon successful payment."
+  success_url: String
+  "URL to redirect the user if payment is canceled."
+  cancel_url: String
+  "Payment method chosen for the checkout."
+  payment_method: String
+  "Email address associated with the checkout."
+  email: String
+  "Status of the checkout."
+  status: String!
+  "URL for the checkout session."
+  checkout_url: String
+  "Original payment ID associated with the checkout."
+  origin_payment_id: String
+  "Billing address associated with the checkout."
+  billing_address: AddressDTO
+  "Shipping address associated with the checkout."
+  shipping_address: AddressDTO
+  "List of available payment methods for the checkout."
+  available_payment_methods: [AvailablePaymentMethodDTO!]
+  "Discount code applied to the checkout."
+  discount_code: String
+  "Details of the cart associated with the checkout."
+  cart: CartDTO!
+  "Total amounts and details of the checkout."
+  totals: TotalsDTO!
+}
+type RemoveCheckoutDTO {
+  "Indicates whether the checkout removal was successful."
+  success: Boolean!
+  "Message providing additional details about the removal process."
+  message: String!
+}
+type UpdateCheckoutDTO {
+  "Indicates if the buyer accepts purchase conditions."
+  buyer_accepts_purchase_conditions: Boolean
+  "Indicates if the buyer accepts terms and conditions."
+  buyer_accepts_terms_conditions: Boolean
+  "Timestamp of when the checkout was created."
+  created_at: String!
+  "Timestamp of the last update to the checkout."
+  updated_at: String!
+  "Unique identifier for the checkout."
+  id: String!
+  "Timestamp of when the checkout was deleted."
+  deleted_at: String
+  "URL to redirect the user upon successful payment."
+  success_url: String
+  "URL to redirect the user if payment is canceled."
+  cancel_url: String
+  "Payment method chosen for the checkout."
+  payment_method: String
+  "Email address associated with the checkout."
+  email: String
+  "Status of the checkout."
+  status: String!
+  "URL for the checkout session."
+  checkout_url: String
+  "Original payment ID associated with the checkout."
+  origin_payment_id: String
+  "Billing address associated with the checkout."
+  billing_address: AddressDTO
+  "Shipping address associated with the checkout."
+  shipping_address: AddressDTO
+  "List of available payment methods for the checkout."
+  available_payment_methods: [AvailablePaymentMethodDTO!]
+  "Discount code applied to the checkout."
+  discount_code: String
+  "Details of the cart associated with the checkout."
+  cart: CartDTO!
+  "Total amounts and details of the checkout."
+  totals: TotalsDTO!
+}
+type PaymentMutations {
+  "Initializes a payment session with Klarna."
+  CreatePaymentKlarna(
+    "Unique identifier for the Klarna checkout session."
+    checkout_id: String!,
+    "Country code (ISO 3166-1 alpha-2) for the payment."
+    country_code: String!,
+    "URL to redirect after completing the payment."
+    href: String!,
+    "Email address of the user initiating the payment."
+    email: String
+  ): InitPaymentKlarnaDTO!
+  "Initializes a payment session with Stripe."
+  CreatePaymentStripe(
+    "Unique identifier for the Stripe checkout session."
+    checkout_id: String!,
+    "URL to redirect the user upon successful payment completion."
+    success_url: String!,
+    "Payment method to be used for the Stripe transaction."
+    payment_method: String!,
+    "Email address of the user initiating the payment."
+    email: String!
+  ): InitPaymentStripeDTO!
+  "Creates a payment intent in Stripe for the specified checkout."
+  CreatePaymentIntentStripe(
+    "Unique identifier for the Stripe checkout session."
+    checkout_id: String!,
+    "Indicates whether to return an ephemeral key for the payment intent."
+    return_ephemeral_key: Boolean
+  ): PaymentIntentStripeDTO!
+  "Initializes a payment session with Vipps."
+  CreatePaymentVipps(
+    "Checkout id."
+    checkout_id: String!,
+    "Customer's email."
+    email: String!,
+    "Return url after payment"
+    return_url: String!
+  ): InitPaymentVippsDTO!
+}
+type InitPaymentKlarnaDTO {
+  "Unique identifier for the Klarna order."
+  order_id: ID!
+  "Status of the Klarna order."
+  status: String!
+  "Purchase country for the Klarna order."
+  purchase_country: String!
+  "Currency used in the Klarna order (ISO 4217)."
+  purchase_currency: String!
+  "Locale of the Klarna order."
+  locale: String!
+  "Billing address of the customer."
+  billing_address: KlarnaAddressDTO
+  "Shipping address of the customer."
+  shipping_address: KlarnaAddressDTO
+  "Total order amount."
+  order_amount: Float!
+  "Total tax amount for the order."
+  order_tax_amount: Float!
+  "Total price of line items in the order."
+  total_line_items_price: Float
+  "List of order lines in the Klarna order."
+  order_lines: [KlarnaOrderLineDTO!]!
+  "Merchant URLs for the Klarna order."
+  merchant_urls: KlarnaMerchantUrlDTO!
+  "HTML snippet for embedding the Klarna checkout."
+  html_snippet: String!
+  "Timestamp when the Klarna order was started."
+  started_at: String!
+  "Timestamp of the last modification to the Klarna order."
+  last_modified_at: String!
+  "Additional options for the Klarna order."
+  options: KlarnaOptionsDTO!
+  "Available shipping options for the Klarna order."
+  shipping_options: [KlarnaShippingOptionDTO!]!
+  "Merchant-specific data for the Klarna order."
+  merchant_data: String
+  "Selected shipping option for the Klarna order."
+  selected_shipping_option: KlarnaShippingOptionDTO
+}
+type KlarnaAddressDTO {
+  "First name of the customer."
+  given_name: String
+  "Last name of the customer."
+  family_name: String
+  "Email address of the customer."
+  email: String
+  "Street address of the customer."
+  street_address: String
+  "Postal code of the customer."
+  postal_code: String
+  "City of the customer."
+  city: String
+  "Country code (ISO 3166-1 alpha-2) of the customer."
+  country: String!
+}
+type KlarnaOrderLineDTO {
+  """
+  Type of the order line (e.g., "physical").
+  """
+  type: String!
+  "Name of the product in the order line."
+  name: String!
+  "Quantity of the product in the order line."
+  quantity: Int!
+  "Unit price of the product in the order line."
+  unit_price: Float!
+  "Tax rate applied to the product in the order line."
+  tax_rate: Float!
+  "Total amount for the product in the order line."
+  total_amount: Float!
+  "Total discount amount applied to the product in the order line."
+  total_discount_amount: Float!
+  "Total tax amount for the product in the order line."
+  total_tax_amount: Float!
+  "Merchant-specific data for the order line."
+  merchant_data: String!
+}
+type KlarnaMerchantUrlDTO {
+  "URL to the terms and conditions of the merchant."
+  terms: String!
+  "URL to the checkout page."
+  checkout: String!
+  "URL to the confirmation page."
+  confirmation: String!
+  "URL for push notifications to the merchant."
+  push: String!
+}
+type KlarnaOptionsDTO {
+  "Indicates if separate shipping addresses are allowed."
+  allow_separate_shipping_address: Boolean!
+  "Indicates if date of birth is mandatory."
+  date_of_birth_mandatory: Boolean!
+  "Indicates if the callback success validation is required."
+  require_validate_callback_success: Boolean!
+  "Indicates if the phone number is mandatory."
+  phone_mandatory: Boolean!
+  "Indicates if auto-capture is enabled."
+  auto_capture: Boolean!
+}
+type KlarnaShippingOptionDTO {
+  "Unique identifier of the shipping option."
+  id: ID!
+  "Name of the shipping option."
+  name: String!
+  "Price of the shipping option."
+  price: Float!
+  "Tax amount for the shipping option."
+  tax_amount: Float!
+  "Tax rate applied to the shipping option."
+  tax_rate: Float!
+  "Indicates if the shipping option is preselected."
+  preselected: Boolean!
+}
+type InitPaymentStripeDTO {
+  "URL for the Stripe checkout session."
+  checkout_url: String!
+  "Unique identifier for the associated order."
+  order_id: Int!
+}
+type PaymentIntentStripeDTO {
+  "Client secret key for the Stripe payment intent."
+  client_secret: String!
+  "Unique identifier of the Stripe customer associated with the payment intent."
+  customer: String!
+  "Publishable API key for Stripe."
+  publishable_key: String!
+  "Ephemeral key for the payment intent, if requested."
+  ephemeral_key: String
+}
+type InitPaymentVippsDTO {
+  "URL for the Vipps portal."
+  payment_url: String!
+}
+type DiscountsMutations {
+  "Adds a new discount with specified details."
+  AddDiscount(
+    "Unique code representing the discount."
+    code: String!,
+    "Percentage value of the discount."
+    percentage: Int!,
+    "Start date of the discount."
+    start_date: String!,
+    "End date of the discount."
+    end_date: String!,
+    "Identifier for the discount type."
+    type_id: Int!
+  ): AddDiscountDTO!
+  "Applies a discount to the specified cart."
+  ApplyDiscount(
+    "Unique code of the discount to be applied."
+    code: String!,
+    "Unique identifier of the cart where the discount will be applied."
+    cart_id: String!
+  ): ApplyDiscountDTO!
+  "Removes an applied discount from the specified cart."
+  DeleteAppliedDiscount(
+    "Unique code of the discount to be removed."
+    code: String!,
+    "Unique identifier of the cart from which the discount will be removed."
+    cart_id: String!
+  ): DeleteAppliedDiscountDTO!
+  "Deletes a discount by its identifier."
+  DeleteDiscount(
+    "Unique identifier of the discount to be deleted."
+    discount_id: Int!
+  ): DeleteDiscountDTO!
+  "Updates the details of an existing discount."
+  UpdateDiscount(
+    "Unique identifier of the discount to be updated."
+    discount_id: Int!,
+    "Code of the discount."
+    code: String = "",
+    "Percentage value of the discount."
+    percentage: Int = 0,
+    "Start date of the discount."
+    start_date: String = "",
+    "End date of the discount."
+    end_date: String = "",
+    "List of product IDs associated with the discount."
+    products: [Int!] = []
+  ): UpdateDiscountDTO!
+  "Verifies the validity and applicability of a discount."
+  VerifyDiscount(
+    "Unique identifier of the discount to verify."
+    id: Int = 0,
+    "Code of the discount to verify."
+    code: String = ""
+  ): VerifyDiscountDTO!
+}
+type AddDiscountDTO {
+  "Unique identifier of the discount."
+  id: Int!
+  "Number of discounts applied."
+  discount_count: Int
+  "Code representing the discount."
+  code: String
+  "Percentage value of the discount."
+  percentage: Int
+  "Start date of the discount."
+  start_date: String
+  "End date of the discount."
+  end_date: String
+  "Details of the discount type."
+  discount_type: DiscountTypeDTO
+  "List of products associated with the discount."
+  discount_product: [DiscountProductDTO!]
+  "Metadata associated with the discount."
+  discount_metadata: DiscountMetadataDTO
+}
+type ApplyDiscountDTO {
+  "Indicates whether the discount was successfully applied."
+  executed: Boolean!
+  "Message providing details about the discount application result."
+  message: String!
+}
+type DeleteAppliedDiscountDTO {
+  "Indicates whether the discount was successfully removed."
+  executed: Boolean!
+  "Message providing details about the discount removal result."
+  message: String!
+}
+type DeleteDiscountDTO {
+  "Indicates whether the discount was successfully deleted."
+  executed: Boolean!
+  "Message providing details about the discount deletion result."
+  message: String!
+}
+type UpdateDiscountDTO {
+  "Unique identifier of the discount."
+  id: Int!
+  "Number of discounts applied."
+  discount_count: Int
+  "Code representing the discount."
+  code: String
+  "Percentage value of the discount."
+  percentage: Int
+  "Start date of the discount."
+  start_date: String
+  "End date of the discount."
+  end_date: String
+  "Details of the discount type."
+  discount_type: DiscountTypeDTO
+  "List of products associated with the discount."
+  discount_product: [DiscountProductDTO!]
+  "Metadata associated with the discount."
+  discount_metadata: DiscountMetadataDTO
+}
+type VerifyDiscountDTO {
+  "Indicates whether the discount is valid."
+  valid: Boolean!
+  "Message providing details about the discount verification result."
+  message: String!
+  "Details of the discount if valid."
+  discount: DiscountDTO
+}
+type DiscountDTO {
+  "Unique identifier of the discount."
+  id: Int!
+  "Number of discounts applied."
+  discount_count: Int
+  "Code representing the discount."
+  code: String
+  "Percentage value of the discount."
+  percentage: Int
+  "Start date of the discount."
+  start_date: String
+  "End date of the discount."
+  end_date: String
+  "Details of the discount type."
+  discount_type: DiscountTypeDTO
+  "List of products associated with the discount."
+  discount_product: [DiscountProductDTO!]
+  "Metadata associated with the discount."
+  discount_metadata: DiscountMetadataDTO
+}
+union administrative_division = Country | County | Province
+union administrative_division2 = CountryMarkets | CountyMarkets | ProvinceMarkets | StateMarkets
+"The size of the image"
+enum ImageSize {
+  large
+  medium
+  thumbnail
+  full
+}
+input ProductsFiltersArgs {
+  "Filter products by product ID."
+  product_id: Int = 0
+  "Filter products by category ID."
+  category_id: Int = 0
+  "Filter products by SKU."
+  sku: String = ""
+  "Filter products by barcode."
+  barcode: String = ""
+  "Filter products by title."
+  title: String = ""
+}
+input LineItemInput {
+  "Unique identifier for the product."
+  product_id: Int! = 0
+  "Quantity of the product, default is 0 if not specified."
+  quantity: Int = 0
+  "Variant identifier for the product, if applicable."
+  variant_id: Int
+}
+input PriceDataInput {
+  """
+  Currency in ISO 4217 format (e.g., "USD", "EUR").
+  """
+  currency: String!
+  "Tax amount for the item, default is 0 if not specified."
+  tax: Float = 0
+  "Unit price of the item, default is 0 if not specified."
+  unit_price: Float = 0
+}
+input DataUpdateShippingsBySupplier {
+  "Unique identifier of the supplier."
+  supplier_id: Int!
+  "Unique identifier of the shipping method associated with the supplier."
+  shipping_id: String!
+}
+input AddressArgs {
+  "First name of the address owner."
+  first_name: String
+  "Last name of the address owner."
+  last_name: String
+  "Phone code, typically the country calling code."
+  phone_code: String
+  "Phone number of the address owner."
+  phone: String
+  "Company name associated with the address, if applicable."
+  company: String
+  "Primary address line."
+  address1: String
+  "Secondary address line, if applicable."
+  address2: String
+  "City of the address."
+  city: String
+  "Province or state of the address."
+  province: String
+  "Code of the province or state."
+  province_code: String
+  "Country name of the address."
+  country: String
+  "ISO code of the country."
+  country_code: String
+  "Postal or ZIP code of the address."
+  zip: String
+  "Email address associated with the owner."
+  email: String
+}
+"Exposes a URL that specifies the behaviour of this scalar."
+directive @specifiedBy(
+    "The URL that specifies the behaviour of this scalar."
+    url: String!
+  ) on SCALAR
+

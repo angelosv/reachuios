@@ -1,0 +1,32 @@
+query GetProductDetail($id: ID!) {
+  Channel {
+    GetProduct(id: $id) {
+      id
+      title
+      description
+      images {
+        id
+        url
+        order
+      }
+      price {
+        currency_code
+        amount
+        compare_at
+      }
+      category
+      variants {
+        id
+        title
+        options {
+          name
+          value
+        }
+      }
+      inventory {
+        available
+        in_stock
+      }
+    }
+  }
+} 
