@@ -1,6 +1,9 @@
 import SwiftUI
-import AVKit
 import WebKit
+import AVFoundation
+import os
+
+private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "reachudemo", category: "VideoPlayer")
 
 struct VideoResponse: Codable {
     let url: String
@@ -8,7 +11,31 @@ struct VideoResponse: Codable {
     let message: String
 }
 
-// Modelo para productos demo
+// Extension to print player status
+extension AVPlayer.Status: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .unknown: return "unknown"
+        case .readyToPlay: return "readyToPlay"
+        case .failed: return "failed"
+        @unknown default: return "unknown default"
+        }
+    }
+}
+
+// Extension to print playerItem status
+extension AVPlayerItem.Status: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .unknown: return "unknown"
+        case .readyToPlay: return "readyToPlay"
+        case .failed: return "failed"
+        @unknown default: return "unknown default"
+        }
+    }
+}
+
+// Demo product model
 struct DemoProduct: Identifiable {
     let id = UUID()
     let name: String
@@ -20,31 +47,38 @@ struct VideoPlayerView: View {
     let videoId: String
     @Environment(\.presentationMode) var presentationMode
     @State private var isLoading = true
-    @State private var videoURL: URL?
+    @State private var isPlaying = true
     @State private var showProductsOverlay = false
     @State private var errorMessage: String = ""
     @State private var showProductDetail = false
     @State private var selectedProduct: ReachuProduct?
-    @State private var isPlaying = false
+    @State private var videoUrl: String? = nil
+    @State private var debugLog: String = ""
     
-    // Usar el LiveShowViewModel para acceder a productos reales
+    // Simple fallback URL with minimal parameters - prevent fullscreen
+    private let fallbackVideoURL = "https://player.vimeo.com/video/760249219?autoplay=1&title=0&byline=0&portrait=0&fullscreen=0"
+    
+    // Use LiveShowViewModel to access real products
     @StateObject private var viewModel = LiveShowViewModel()
     
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Fondo negro siempre
+                // Always black background
                 Color.black.edgesIgnoringSafeArea(.all)
                 
-                // Video embebido con WebView
-                if let url = videoURL {
-                    WebViewVideoPlayer(videoURL: url, isPlaying: $isPlaying)
-                        .edgesIgnoringSafeArea(.all)
-                        .onAppear {
+                // Video player
+                if let videoUrlString = videoUrl, !videoUrlString.isEmpty {
+                    SimpleVideoWebView(urlString: videoUrlString)
+                    .edgesIgnoringSafeArea(.all)
+                    .onAppear {
+                        addLog("WebView appeared with URL: \(videoUrlString)")
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                             isLoading = false
                         }
+                    }
                 } else {
-                    // Imagen de fondo como fallback si el video no carga
+                    // Loading view while waiting for URL
                     VStack {
                         Image(systemName: "video.fill")
                             .resizable()
@@ -58,19 +92,30 @@ struct VideoPlayerView: View {
                         
                         if !errorMessage.isEmpty {
                             Text(errorMessage)
-                                .foregroundColor(Color(hex: "#7300f9"))
+                                .foregroundColor(.red)
                                 .font(.caption)
                                 .padding()
                         }
+                        
+                        // Show logs for diagnostics
+                        ScrollView {
+                            Text(debugLog)
+                                .font(.system(size: 12))
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                        }
+                        .frame(height: 200)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.black)
                 }
                 
-                // Botón grande de play/pause en el centro
+                // Large play button in the center - simplified
                 if !isLoading {
                     Button(action: {
                         isPlaying.toggle()
+                        addLog("Play/Pause toggled: \(isPlaying ? "Playing" : "Paused")")
                     }) {
                         Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
                             .resizable()
@@ -84,9 +129,9 @@ struct VideoPlayerView: View {
                     .buttonStyle(PlainButtonStyle())
                 }
                 
-                // Overlay de controles y productos
+                // Controls and products overlay
                 VStack(spacing: 0) {
-                    // Controles superiores
+                    // Top controls
                     HStack {
                         Button(action: {
                             presentationMode.wrappedValue.dismiss()
@@ -102,7 +147,7 @@ struct VideoPlayerView: View {
                         
                         Spacer()
                         
-                        // Botón para mostrar/ocultar productos
+                        // Button to show/hide products
                         Button(action: {
                             withAnimation {
                                 showProductsOverlay.toggle()
@@ -143,7 +188,7 @@ struct VideoPlayerView: View {
                     // Video Controls
                     HStack(spacing: 40) {
                         Button(action: {
-                            // Acción para retroceder 10 segundos
+                            addLog("Rewinding 10 seconds (not implemented)")
                         }) {
                             Image(systemName: "gobackward.10")
                                 .font(.system(size: 22))
@@ -152,6 +197,7 @@ struct VideoPlayerView: View {
                         
                         Button(action: {
                             isPlaying.toggle()
+                            addLog("Play/Pause from bottom controls: \(isPlaying ? "Playing" : "Paused")")
                         }) {
                             Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                                 .font(.system(size: 32))
@@ -159,7 +205,7 @@ struct VideoPlayerView: View {
                         }
                         
                         Button(action: {
-                            // Acción para avanzar 10 segundos
+                            addLog("Fast forwarding 10 seconds (not implemented)")
                         }) {
                             Image(systemName: "goforward.10")
                                 .font(.system(size: 22))
@@ -172,7 +218,7 @@ struct VideoPlayerView: View {
                     .cornerRadius(20)
                     .padding(.bottom, 24)
                     
-                    // Panel de productos opcional que se puede mostrar/ocultar
+                    // Optional products panel that can be shown/hidden
                     if showProductsOverlay {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
@@ -180,7 +226,7 @@ struct VideoPlayerView: View {
                                     LiveShowProductCard(
                                         product: product,
                                         onAddToCart: {
-                                            // Simulación de agregar al carrito
+                                            // Simulate adding to cart
                                             let generator = UIImpactFeedbackGenerator(style: .medium)
                                             generator.impactOccurred()
                                         }
@@ -204,7 +250,7 @@ struct VideoPlayerView: View {
                 }
                 .edgesIgnoringSafeArea(.all)
                 
-                // Carrusel flotante en la parte inferior
+                // Floating carousel at the bottom - moved up with padding bottom
                 if !viewModel.products.isEmpty {
                     VStack {
                         Spacer()
@@ -215,42 +261,56 @@ struct VideoPlayerView: View {
                                 showProductDetail = true
                             },
                             onAddToCart: { product in
-                                // Simulación de agregar al carrito
+                                // Simulate adding to cart
                                 let generator = UIImpactFeedbackGenerator(style: .medium)
                                 generator.impactOccurred()
                             }
                         )
-                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom : 16)
+                        // Added more padding to move it up
+                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom + 60 : 80)
                     }
                 }
                 
-                // Indicador de carga
+                // Loading indicator
                 if isLoading {
                     ProgressView()
                         .scaleEffect(1.5)
                         .foregroundColor(.white)
                 }
+                
+                // Debug button to show log
+                VStack {
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            addLog("Debug button pressed")
+                        }) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.black.opacity(0.7))
+                                .clipShape(Circle())
+                        }
+                        .padding(8)
+                    }
+                    Spacer()
+                }
             }
         }
         .statusBar(hidden: true)
         .onAppear {
-            // Usar una URL de fallback por si la API falla
-            let fallbackURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
-            
-            // Configurar el reproductor inmediatamente con la URL de fallback
-            self.videoURL = fallbackURL
-            
-            // Intentar cargar el video real
-            fetchVideoURL()
+            addLog("🏁 VideoPlayerView appeared")
+            fetchVideo()
         }
         .sheet(isPresented: $showProductDetail) {
             if let product = selectedProduct {
-                // Usar el componente ProductDetailModal existente
+                // Use existing ProductDetailModal component
                 ZStack {
                     Color.white.edgesIgnoringSafeArea(.all)
                     
                     VStack {
-                        // Header con botón de cierre
+                        // Header with close button
                         HStack {
                             Button(action: {
                                 showProductDetail = false
@@ -272,7 +332,7 @@ struct VideoPlayerView: View {
                         }
                         .padding()
                         
-                        // Usar el ProductDetailModal existente
+                        // Use the existing ProductDetailModal
                         ProductDetailModal(
                             product: product,
                             isPresented: $showProductDetail,
@@ -286,169 +346,239 @@ struct VideoPlayerView: View {
         }
     }
     
-    private func fetchVideoURL() {
-        let urlString = "https://microservices.tipioapp.com/videos/video/cosmedbeauty-desember2024"
+    // Function to add logs with timestamp
+    private func addLog(_ message: String) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "HH:mm:ss.SSS"
+        let timestamp = dateFormatter.string(from: Date())
+        debugLog = "[\(timestamp)] \(message)\n" + debugLog
+        
+        // Limit log to last 15 entries to avoid a very long log
+        let lines = debugLog.components(separatedBy: "\n")
+        if lines.count > 15 {
+            debugLog = lines.prefix(15).joined(separator: "\n")
+        }
+        
+        logger.log("📹 VideoLog: \(message)")
+        print("📹 VideoLog: \(message)")
+    }
+    
+    private func fetchVideo() {
+        // Start with fallback video URL for faster loading
+        addLog("Setting fallback video URL: \(fallbackVideoURL)")
+        videoUrl = fallbackVideoURL
+        
+        // Try to get the real video
+        addLog("Attempting to get real video URL...")
+        let urlString = "https://microservices.tipioapp.com/videos/video/\(videoId)"
+        
+        addLog("Fetching video from: \(urlString)")
+        
         guard let url = URL(string: urlString) else {
-            print("❌ Error: URL de API inválida")
+            addLog("❌ Invalid API URL: \(urlString)")
             return
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
-                print("❌ Error en la petición: \(error.localizedDescription)")
+                addLog("❌ Request error: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    self.errorMessage = "Network error: \(error.localizedDescription)"
+                    errorMessage = "Network error: \(error.localizedDescription)"
                 }
                 return
             }
             
+            if let httpResponse = response as? HTTPURLResponse {
+                addLog("📡 API response code: \(httpResponse.statusCode)")
+            }
+            
             guard let data = data else {
-                print("❌ No data received")
+                addLog("❌ No data received")
                 DispatchQueue.main.async {
-                    self.errorMessage = "No data received"
+                    errorMessage = "No data received"
                 }
                 return
             }
             
             do {
                 let response = try JSONDecoder().decode(VideoResponse.self, from: data)
+                addLog("✅ API response decoded: \(response.url)")
                 
-                DispatchQueue.main.async {
-                    if let videoURL = URL(string: response.url) {
-                        self.videoURL = videoURL
-                    } else {
-                        self.errorMessage = "URL de video inválida"
+                if response.executed {
+                    DispatchQueue.main.async {
+                        if !response.url.isEmpty {
+                            // Use the API response URL but add minimal required parameters
+                            var modifiedUrl = response.url
+                            if !modifiedUrl.contains("?") {
+                                modifiedUrl += "?autoplay=1&title=0&byline=0&portrait=0&fullscreen=0"
+                            } else if !modifiedUrl.contains("autoplay=") {
+                                modifiedUrl += "&autoplay=1&fullscreen=0"
+                            }
+                            addLog("🔄 Using video URL: \(modifiedUrl)")
+                            self.videoUrl = modifiedUrl
+                        } else {
+                            addLog("⚠️ Empty URL in response, keeping fallback")
+                        }
                     }
+                } else {
+                    addLog("⚠️ API reports it was not executed correctly: \(response.message)")
                 }
             } catch {
+                addLog("❌ Error decoding JSON: \(error.localizedDescription)")
                 DispatchQueue.main.async {
-                    self.errorMessage = "Error al procesar datos: \(error.localizedDescription)"
+                    errorMessage = "Error processing data: \(error.localizedDescription)"
                 }
             }
         }.resume()
     }
 }
 
-// Reproductor de video usando WebView
-struct WebViewVideoPlayer: UIViewRepresentable {
-    let videoURL: URL
-    @Binding var isPlaying: Bool
+// Simple WebView for playing Vimeo videos
+struct SimpleVideoWebView: UIViewRepresentable {
+    let urlString: String
     
     func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView()
-        webView.navigationDelegate = context.coordinator
+        print("Creating simple WebView with URL: \(urlString)")
+        
+        let configuration = WKWebViewConfiguration()
+        configuration.allowsInlineMediaPlayback = true
+        configuration.mediaTypesRequiringUserActionForPlayback = []
+        
+        let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.scrollView.isScrollEnabled = false
+        webView.scrollView.bounces = false
         webView.backgroundColor = .black
         webView.isOpaque = false
         
-        // Configuración necesaria para reproducción automática
-        webView.configuration.allowsInlineMediaPlayback = true
-        webView.configuration.mediaTypesRequiringUserActionForPlayback = []
+        // Disable user interaction to prevent fullscreen
+        webView.allowsBackForwardNavigationGestures = false
         
         return webView
     }
     
-    func updateUIView(_ uiView: WKWebView, context: Context) {
-        // Primero cargar el contenido si no está cargado
-        if context.coordinator.videoString == nil {
-            let videoString = createVideoHTML()
-            context.coordinator.videoString = videoString
-            uiView.loadHTMLString(videoString, baseURL: nil)
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL: \(urlString)")
+            return
         }
         
-        // Luego actualizar el estado de reproducción
-        if isPlaying {
-            uiView.evaluateJavaScript("document.getElementById('videoPlayer').play();", completionHandler: nil)
-        } else {
-            uiView.evaluateJavaScript("document.getElementById('videoPlayer').pause();", completionHandler: nil)
-        }
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, WKNavigationDelegate {
-        var parent: WebViewVideoPlayer
-        var videoString: String?
+        print("Loading URL in WebView: \(urlString)")
+        webView.load(URLRequest(url: url))
         
-        init(_ parent: WebViewVideoPlayer) {
-            self.parent = parent
-        }
-        
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            // Script para forzar la reproducción automática cuando se solicite
-            webView.evaluateJavaScript("""
-                var video = document.querySelector('video');
-                if (video) {
-                    video.muted = true;
-                    if (\(parent.isPlaying)) {
-                        video.play();
-                    } else {
-                        video.pause();
-                    }
-                    
-                    // Listeners para mantener la reproducción sincronizada
-                    video.addEventListener('play', function() {
-                        window.webkit.messageHandlers.playing.postMessage(true);
-                    });
-                    video.addEventListener('pause', function() {
-                        window.webkit.messageHandlers.playing.postMessage(false);
-                    });
+        // Add simple CSS to enlarge the video (zoom effect) and prevent fullscreen
+        let cssScript = """
+        setTimeout(function() {
+            var style = document.createElement('style');
+            style.textContent = `
+                video {
+                    transform: scale(1.5) !important;
+                    transform-origin: center !important;
                 }
-            """, completionHandler: nil)
-        }
-    }
-    
-    private func createVideoHTML() -> String {
-        // Para videos MP4 u otros formatos directos
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-            <style>
-                body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #000000; }
-                .video-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-                video { width: 100%; height: 100%; object-fit: contain; background: #000; }
-                .controls { display: none; }
-            </style>
-        </head>
-        <body>
-            <div class="video-container">
-                <video id="videoPlayer" autoplay muted playsinline loop>
-                    <source src="\(videoURL.absoluteString)" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-            <script>
-                // Cuando la página esté lista
-                document.addEventListener('DOMContentLoaded', function() {
-                    var video = document.getElementById('videoPlayer');
-                    
-                    // Inicialmente establecemos el video según el valor del binding
-                    if (\(isPlaying)) {
-                        video.play();
-                    } else {
-                        video.load();
-                        video.pause();
+                .vp-controls, .vp-title, .vp-logo, .vp-portrait, .vp-sidedock, 
+                button, .vp-fullscreen-button, .vp-picture-in-picture-button,
+                .vp-menu-button, .vp-volume-button, .vp-playback-rate-button {
+                    display: none !important;
+                    opacity: 0 !important;
+                    visibility: hidden !important;
+                    pointer-events: none !important;
+                }
+                
+                /* Prevent fullscreen mode */
+                .vp-fullscreen, .vp-target {
+                    pointer-events: none !important;
+                }
+                
+                /* Make video fill entire screen */
+                .vp-player, .vp-player video, .vp-telecine {
+                    width: 100vw !important;
+                    height: 100vh !important;
+                    max-width: none !important;
+                    max-height: none !important;
+                    object-fit: cover !important;
+                }
+            `;
+            document.head.appendChild(style);
+            console.log('Added CSS for zoom effect');
+            
+            // Prevent fullscreen JavaScript
+            document.addEventListener('fullscreenchange', function(e) {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                    console.log('Exited fullscreen mode');
+                }
+            }, false);
+            
+            // Disable all click events on the player
+            const playerElements = document.querySelectorAll('.vp-player, .vp-player *');
+            playerElements.forEach(function(element) {
+                element.addEventListener('click', function(e) {
+                    // Allow only video play/pause
+                    if (e.target.tagName.toLowerCase() === 'video') {
+                        return;
                     }
-                    
-                    // Prevenir que el video tome toda la pantalla en iOS
-                    video.addEventListener('webkitbeginfullscreen', function(e) {
-                        e.preventDefault();
-                        video.webkitExitFullscreen();
-                        return false;
-                    });
-                });
-            </script>
-        </body>
-        </html>
+                    e.stopPropagation();
+                    e.preventDefault();
+                    console.log('Blocked click event');
+                    return false;
+                }, true);
+            });
+        }, 1000);
         """
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            webView.evaluateJavaScript(cssScript) { _, error in
+                if let error = error {
+                    print("Error applying CSS: \(error.localizedDescription)")
+                } else {
+                    print("CSS applied successfully")
+                }
+            }
+        }
+        
+        // Additional script to ensure no fullscreen mode
+        let preventFullscreenScript = """
+        setTimeout(function() {
+            // Disable fullscreen API
+            const originalRequestFullscreen = Element.prototype.requestFullscreen;
+            Element.prototype.requestFullscreen = function() {
+                console.log('Fullscreen request blocked');
+                return;
+            };
+            
+            // Find and disable fullscreen button
+            const fullscreenButtons = document.querySelectorAll('[aria-label*="full screen"], [title*="full screen"], .fullscreen-button, .vp-fullscreen');
+            fullscreenButtons.forEach(function(button) {
+                button.style.display = 'none';
+                button.style.visibility = 'hidden';
+                button.disabled = true;
+                button.setAttribute('aria-hidden', 'true');
+                button.remove();
+            });
+            
+            // Block all touch events that might trigger fullscreen
+            document.addEventListener('touchstart', function(e) {
+                if (e.target.closest('.vp-controls, .vp-player')) {
+                    if (e.target.tagName.toLowerCase() !== 'video') {
+                        e.stopPropagation();
+                    }
+                }
+            }, true);
+        }, 1500);
+        """
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            webView.evaluateJavaScript(preventFullscreenScript) { _, error in
+                if let error = error {
+                    print("Error applying fullscreen prevention: \(error.localizedDescription)")
+                } else {
+                    print("Fullscreen prevention applied")
+                }
+            }
+        }
     }
 }
 
-// Vista previa
+// Preview
 #Preview {
     VideoPlayerView(videoId: "cosmedbeauty-desember2024")
 } 
