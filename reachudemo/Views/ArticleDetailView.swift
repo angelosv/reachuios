@@ -12,9 +12,9 @@ struct ArticleDetailView: View {
     @Environment(\.presentationMode) var presentationMode
     
     // Demo product ID
-    let productId = 123 // Replace with an actual product ID
-    // Specific Omega-3 product ID
-    let omegaProductId = 12071 // ID for the specific Omega-3 product
+    let productId = 1904016 // Updated product ID
+    // Specific product ID for recommended section
+    let omegaProductId = 1904019 // Updated recommended product ID
     
     var body: some View {
         ScrollView {
@@ -219,8 +219,7 @@ struct ArticleDetailView: View {
         let service = ReachuGraphQLService()
         
         // Use a valid product ID from the Reachu API
-        // For demo purposes, we'll use a hardcoded ID
-        service.fetchProductById(productId: 1234)
+        service.fetchProductById(productId: productId)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { completion in
