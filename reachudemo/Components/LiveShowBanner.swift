@@ -13,52 +13,59 @@ struct LiveShowBanner: View {
                 // Image on the left
                 AsyncImage(url: URL(string: liveStream.thumbnail)) { phase in
                     switch phase {
-                    case .empty:
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 120, height: 90)
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: 120, height: 90)
-                    case .failure:
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 120, height: 90)
-                            .overlay(
-                                Image(systemName: "photo")
-                                    .foregroundColor(.gray)
-                            )
-                    @unknown default:
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 120, height: 90)
+                        case .empty:
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 120, height: 90)
+                                .cornerRadius(10)
+                                .overlay(
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle())
+                                        .tint(primaryColor)
+                                )
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 120, height: 90)
+                                .clipped()
+                                .cornerRadius(10)
+                                .overlay(
+                                    VStack {
+                                        HStack {
+                                            Image(systemName: "dot.radiowaves.left.and.right")
+                                                .foregroundColor(primaryColor)
+                                            Text("LIVE")
+                                                .font(.caption2)
+                                                .fontWeight(.bold)
+                                                .foregroundColor(.white)
+                                        }
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.black.opacity(0.6))
+                                        .cornerRadius(4)
+                                        .padding(6)
+                                        
+                                        Spacer()
+                                    },
+                                    alignment: .topLeading
+                                )
+                        case .failure:
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 120, height: 90)
+                                .cornerRadius(10)
+                                .overlay(
+                                    Image(systemName: "photo")
+                                        .foregroundColor(.gray)
+                                )
+                        @unknown default:
+                            Rectangle()
+                                .fill(Color.gray.opacity(0.3))
+                                .frame(width: 120, height: 90)
+                                .cornerRadius(10)
                     }
                 }
-                .clipped()
-                .cornerRadius(10)
-                .overlay(
-                    VStack {
-                        HStack {
-                            Image(systemName: "dot.radiowaves.left.and.right")
-                                .foregroundColor(primaryColor)
-                            Text("LIVE")
-                                .font(.caption2)
-                                .fontWeight(.bold)
-                                .foregroundColor(.white)
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color.black.opacity(0.6))
-                        .cornerRadius(4)
-                        .padding(6)
-                        
-                        Spacer()
-                    },
-                    alignment: .topLeading
-                )
                 
                 // Content on the right
                 VStack(alignment: .leading, spacing: 4) {
@@ -135,7 +142,6 @@ extension DateFormatter {
         liveStream: demoLiveStream,
         action: {}
     )
-    .previewLayout(.sizeThatFits)
     .padding()
     .background(Color.gray.opacity(0.1))
 } 

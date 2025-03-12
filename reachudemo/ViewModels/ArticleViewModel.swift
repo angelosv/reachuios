@@ -5,7 +5,7 @@ class ArticleViewModel: ObservableObject {
     @Published var featuredArticles: [Article] = []
     @Published var trendingArticles: [Article] = []
     @Published var allArticles: [Article] = []
-    @Published var categories: [Category] = Category.allCases
+    @Published var categories: [String] = Categories.all
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
@@ -37,7 +37,7 @@ class ArticleViewModel: ObservableObject {
         }
     }
     
-    func fetchArticlesByCategory(_ category: Category) {
+    func fetchArticlesByCategory(_ category: String) {
         isLoading = true
         errorMessage = nil
         
@@ -74,5 +74,16 @@ class ArticleViewModel: ObservableObject {
             self.allArticles = filtered
             self.isLoading = false
         }
+    }
+    
+    // Gets a sample article for display in Article Detail View
+    func getSampleArticle() -> Article {
+        return Article(
+            id: "sample-article",
+            title: "Diabetes Mellitus in Young Age: Causes and Characteristics",
+            content: "Lorem ipsum dolor sit amet consectetur. Interdum viverra vitae lectus mi quis pharetra. Vel fusce sed viverra eget a ante mauris libero adipiscing.",
+            imageURL: URL(string: "https://picsum.photos/800/600?random=10"),
+            category: Categories.health
+        )
     }
 } 

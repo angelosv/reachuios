@@ -9,17 +9,17 @@ class StoreViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var cartItems: [CartItem] = []
     
-    // Computed property para cartItemCount
+    // Computed property for cartItemCount
     var cartItemCount: Int {
         return cartItems.reduce(0) { $0 + $1.quantity }
     }
     
-    // Computed property para obtener el total de los items seleccionados
+    // Computed property to get the total of selected items
     var selectedItemsTotal: Double {
         return cartItems.filter { $0.isSelected }.reduce(0) { $0 + $1.subtotal }
     }
     
-    // Computed property para el total formateado
+    // Computed property for formatted total
     var formattedSelectedItemsTotal: String {
         if let currencyCode = cartItems.first?.product.price.currency_code {
             return "\(currencyCode)\(Int(selectedItemsTotal))"
@@ -27,7 +27,7 @@ class StoreViewModel: ObservableObject {
         return "Rp0"
     }
     
-    // Computed property para contar cuántos items están seleccionados
+    // Computed property to count how many items are selected
     var selectedItemsCount: Int {
         return cartItems.filter { $0.isSelected }.count
     }
@@ -36,7 +36,7 @@ class StoreViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
-        // Cargar productos de Reachu al inicializar
+        // Load Reachu products on initialization
         fetchProducts()
     }
     
@@ -70,12 +70,12 @@ class StoreViewModel: ObservableObject {
     
     func filterByCategory(_ category: ProductCategory?) {
         self.selectedCategory = category
-        // Implementar filtrado por categoría para productos de Reachu si es necesario
+        // Implement category filtering for Reachu products if needed
     }
     
-    // Métodos para manejar el carrito
+    // Methods for handling the cart
     func addReachuProductToCart(_ product: ReachuProduct, size: String? = nil, color: String? = nil, quantity: Int = 1) {
-        // Verificar si el producto ya está en el carrito
+        // Check if the product is already in the cart
         if let index = cartItems.firstIndex(where: { $0.product.id == product.id && $0.size == size && $0.color == color }) {
             cartItems[index].quantity += quantity
         } else {
@@ -91,7 +91,7 @@ class StoreViewModel: ObservableObject {
             if newQuantity > 0 {
                 cartItems[index].quantity = newQuantity
             } else {
-                // Si la cantidad es 0 o negativa, eliminamos el item
+                // If quantity is 0 or negative, remove the item
                 removeCartItem(itemId: itemId)
             }
         }

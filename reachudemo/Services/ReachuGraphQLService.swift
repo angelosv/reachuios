@@ -31,20 +31,7 @@ struct ReachuProduct: Codable, Identifiable {
     }
     
     var formattedPrice: String {
-        // Intentar convertir el monto a Double para formatear correctamente
-        if let amountDouble = Double(price.amount) {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.currencyCode = price.currency_code
-            formatter.maximumFractionDigits = 0
-            
-            if let formattedAmount = formatter.string(from: NSNumber(value: amountDouble)) {
-                return formattedAmount
-            }
-        }
-        
-        // Fallback al formato básico si no se puede convertir
-        return "\(price.currency_code) \(price.amount)"
+        return price.formattedPrice
     }
     
     // Custom init para manejar el id como Int o String
@@ -112,6 +99,24 @@ struct ReachuImage: Codable {
 struct ReachuPrice: Codable {
     let currency_code: String
     let amount: String
+    
+    var formattedPrice: String {
+        // Intentar convertir el monto a Double para formatear correctamente
+        if let amountDouble = Double(amount) {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.currencyCode = currency_code
+            formatter.maximumFractionDigits = 0
+            formatter.minimumFractionDigits = 0  // No decimal places shown
+            
+            if let formattedAmount = formatter.string(from: NSNumber(value: amountDouble)) {
+                return formattedAmount
+            }
+        }
+        
+        // Fallback al formato básico si no se puede convertir
+        return "\(currency_code) \(amount)"
+    }
 }
 
 // Modelo alternativo para probar otras estructuras
@@ -428,6 +433,74 @@ class ReachuGraphQLService {
             }
             .mapError { error in
                 print("❌ Error en la solicitud: \(error.localizedDescription)")
+                if let apiError = error as? APIError {
+                    return apiError
+                }
+                return APIError.networkError(error)
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    func fetchProductById(productId: Int) -> AnyPublisher<ReachuProduct, Error> {
+        print("🔍 Iniciando solicitud GraphQL para obtener producto con ID: \(productId)")
+        
+        let query = """
+        query GetProductsByIds {
+          Channel {
+            GetProductsByIds(product_ids: [\(productId)]) {
+              id
+              images {
+                url
+                order
+              }
+              supplier
+              price {
+                amount
+                currency_code
+                amount_incl_taxes
+                tax_amount
+                tax_rate
+                compare_at
+                compare_at_incl_taxes
+              }
+              title
+              description
+            }
+          }
+        }
+        """
+        
+        return performGraphQLRequest(query: query)
+            .tryMap { [self] data -> ReachuProduct in
+                print("📦 Procesando respuesta GraphQL para producto ID: \(productId)")
+                
+                // Imprimir la respuesta completa
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("📄 Respuesta JSON completa:\n\(jsonString)")
+                }
+                
+                // Intentar obtener el producto
+                do {
+                    let decoder = JSONDecoder()
+                    let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                    
+                    if let dataObj = json?["data"] as? [String: Any],
+                       let channel = dataObj["Channel"] as? [String: Any],
+                       let products = channel["GetProductsByIds"] as? [[String: Any]],
+                       let productJson = products.first {
+                        
+                        if let product = createProduct(from: productJson, index: 0) {
+                            return product
+                        }
+                    }
+                    
+                    throw APIError.invalidResponse
+                } catch {
+                    print("❌ Error al decodificar producto: \(error)")
+                    throw APIError.decodingError(error)
+                }
+            }
+            .mapError { error in
                 if let apiError = error as? APIError {
                     return apiError
                 }

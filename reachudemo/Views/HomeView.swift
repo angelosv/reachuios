@@ -40,7 +40,7 @@ struct HomeView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 15) {
-                                ForEach(viewModel.categories) { category in
+                                ForEach(viewModel.categories, id: \.self) { category in
                                     CategoryCard(category: category)
                                         .onTapGesture {
                                             viewModel.fetchArticlesByCategory(category)

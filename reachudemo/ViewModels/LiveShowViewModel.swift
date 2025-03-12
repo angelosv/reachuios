@@ -12,7 +12,7 @@ class LiveShowViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     init() {
-        // Cargamos los datos de ejemplo en la inicialización
+        // Load demo data on initialization
         loadDemoShow()
     }
     
@@ -71,7 +71,7 @@ class LiveShowViewModel: ObservableObject {
     }
     
     private func loadDemoShow() {
-        // Creamos un LiveStream de demostración con los datos del endpoint
+        // Create a demo LiveStream with data from the endpoint
         currentShow = LiveStream(
             id: 35,
             title: "30% på alt! Bli med vinn fine premier live",
@@ -88,7 +88,7 @@ class LiveShowViewModel: ObservableObject {
         )
     }
     
-    // Helper para formatear la fecha
+    // Helper to format the date
     func formattedTime(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short

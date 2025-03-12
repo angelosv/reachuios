@@ -1,14 +1,15 @@
 import Foundation
 
 struct Article: Identifiable {
-    let id = UUID()
+    let id: String
     let title: String
     let subtitle: String?
     let content: String
     let imageName: String
+    let imageURL: URL?
     let readTime: String
     let commentCount: Int
-    let category: Category
+    let category: String
     let isFeatured: Bool
     let isTrending: Bool
     let publishDate: Date
@@ -16,25 +17,58 @@ struct Article: Identifiable {
     var formattedCommentCount: String {
         commentCount > 0 ? "\(commentCount)" : ""
     }
+    
+    init(id: String = UUID().uuidString, 
+         title: String, 
+         subtitle: String? = nil, 
+         content: String, 
+         imageName: String = "",
+         imageURL: URL? = nil,
+         readTime: String = "5 mins read", 
+         commentCount: Int = 0, 
+         category: String,
+         isFeatured: Bool = false, 
+         isTrending: Bool = false, 
+         publishDate: Date = Date()) {
+        
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.content = content
+        self.imageName = imageName
+        self.imageURL = imageURL
+        self.readTime = readTime
+        self.commentCount = commentCount
+        self.category = category
+        self.isFeatured = isFeatured
+        self.isTrending = isTrending
+        self.publishDate = publishDate
+    }
 }
 
-enum Category: String, CaseIterable, Identifiable {
-    case diet = "Diet"
-    case diabeticLifestyle = "Diabetic Lifestyle"
-    case dailyNutrition = "Daily Nutrition"
-    case general = "General"
+// Categories as constants
+struct Categories {
+    static let diet = "Diet"
+    static let diabeticLifestyle = "Diabetic Lifestyle"
+    static let dailyNutrition = "Daily Nutrition"
+    static let general = "General"
+    static let health = "Health"
     
-    var id: String { self.rawValue }
+    static let all = [diet, diabeticLifestyle, dailyNutrition, general, health]
     
-    var imageName: String {
-        switch self {
-        case .diet:
+    static func imageName(for category: String) -> String {
+        switch category {
+        case diet:
             return "diet_image"
-        case .diabeticLifestyle:
+        case diabeticLifestyle:
             return "diabetic_lifestyle"
-        case .dailyNutrition:
+        case dailyNutrition:
             return "daily_nutrition"
-        case .general:
+        case health:
+            return "health_category"
+        case general:
+            return "general_health"
+        default:
             return "general_health"
         }
     }
@@ -48,9 +82,10 @@ extension Article {
             subtitle: "Get tips from the master.",
             content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             imageName: "cooking_fun",
+            imageURL: URL(string: "https://picsum.photos/800/600?random=1"),
             readTime: "7 mins reading",
             commentCount: 2,
-            category: .general,
+            category: Categories.general,
             isFeatured: true,
             isTrending: false,
             publishDate: Date().addingTimeInterval(-86400)
@@ -60,9 +95,10 @@ extension Article {
             subtitle: "Get tips from the master.",
             content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             imageName: "cooking_ingredients",
+            imageURL: URL(string: "https://picsum.photos/800/600?random=2"),
             readTime: "7 mins reading",
             commentCount: 2,
-            category: .general,
+            category: Categories.general,
             isFeatured: true,
             isTrending: false,
             publishDate: Date().addingTimeInterval(-86400 * 2)
@@ -75,9 +111,10 @@ extension Article {
             subtitle: nil,
             content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             imageName: "diabetes_young",
+            imageURL: URL(string: "https://picsum.photos/800/600?random=3"),
             readTime: "5 mins read",
             commentCount: 2,
-            category: .diabeticLifestyle,
+            category: Categories.health,
             isFeatured: false,
             isTrending: true,
             publishDate: Date().addingTimeInterval(-86400 * 3)
@@ -87,9 +124,10 @@ extension Article {
             subtitle: nil,
             content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             imageName: "diabetes_consultation",
+            imageURL: URL(string: "https://picsum.photos/800/600?random=4"),
             readTime: "5 mins read",
             commentCount: 0,
-            category: .diabeticLifestyle,
+            category: Categories.diabeticLifestyle,
             isFeatured: false,
             isTrending: true,
             publishDate: Date().addingTimeInterval(-86400 * 4)
@@ -99,9 +137,10 @@ extension Article {
             subtitle: nil,
             content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
             imageName: "diabetes_family",
+            imageURL: URL(string: "https://picsum.photos/800/600?random=5"),
             readTime: "5 mins read",
             commentCount: 0,
-            category: .diabeticLifestyle,
+            category: Categories.diabeticLifestyle,
             isFeatured: false,
             isTrending: true,
             publishDate: Date().addingTimeInterval(-86400 * 5)
