@@ -64,9 +64,22 @@ struct ReachuProductCard: View {
                 
                 HStack(alignment: .center) {
                     // Price on the left
-                    Text(product.formattedPrice)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(primaryColor)
+                    if product.price.hasDiscount, let compareAtPrice = product.price.formattedCompareAtPrice {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(compareAtPrice)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .strikethrough()
+                            
+                            Text(product.formattedPrice)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(primaryColor)
+                        }
+                    } else {
+                        Text(product.formattedPrice)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundColor(primaryColor)
+                    }
                     
                     Spacer()
                     

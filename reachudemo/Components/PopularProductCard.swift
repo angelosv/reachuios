@@ -43,10 +43,24 @@ struct PopularProductCard: View {
                 
                 // Price and add button
                 HStack {
-                    Text(product.formattedPrice)
-                        .font(.subheadline)
-                        .fontWeight(.bold)
-                        .foregroundColor(primaryColor)
+                    if product.price.hasDiscount, let compareAtPrice = product.price.formattedCompareAtPrice {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(compareAtPrice)
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                                .strikethrough()
+                            
+                            Text(product.formattedPrice)
+                                .font(.subheadline)
+                                .fontWeight(.bold)
+                                .foregroundColor(primaryColor)
+                        }
+                    } else {
+                        Text(product.formattedPrice)
+                            .font(.subheadline)
+                            .fontWeight(.bold)
+                            .foregroundColor(primaryColor)
+                    }
                     
                     Spacer()
                     

@@ -54,10 +54,24 @@ struct FeaturedProductCard: View {
                     .lineLimit(1)
                     .foregroundColor(colorScheme == .dark ? .white : .primary)
                 
-                Text(product.formattedPrice)
-                    .font(.headline)
-                    .fontWeight(.bold)
-                    .foregroundColor(Color(hex: "#7300f9"))
+                if product.price.hasDiscount, let compareAtPrice = product.price.formattedCompareAtPrice {
+                    HStack(spacing: 4) {
+                        Text(compareAtPrice)
+                            .font(.caption)
+                            .foregroundColor(.gray)
+                            .strikethrough()
+                        
+                        Text(product.formattedPrice)
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(Color(hex: "#7300f9"))
+                    }
+                } else {
+                    Text(product.formattedPrice)
+                        .font(.headline)
+                        .fontWeight(.bold)
+                        .foregroundColor(Color(hex: "#7300f9"))
+                }
             }
             .padding(.top, 8)
         }

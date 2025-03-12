@@ -99,6 +99,39 @@ struct ReachuImage: Codable {
 struct ReachuPrice: Codable {
     let currency_code: String
     let amount: String
+    let compare_at: String?
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        // Decodificar currency_code
+        currency_code = try container.decode(String.self, forKey: .currency_code)
+        
+        // Manejar amount como Int o String
+        if let amountInt = try? container.decode(Int.self, forKey: .amount) {
+            amount = String(amountInt)
+        } else {
+            amount = try container.decode(String.self, forKey: .amount)
+        }
+        
+        // Manejar compare_at como Int, String o nil
+        if let compareAtInt = try? container.decode(Int.self, forKey: .compare_at) {
+            compare_at = String(compareAtInt)
+        } else {
+            compare_at = try? container.decode(String.self, forKey: .compare_at)
+        }
+    }
+    
+    // Constructor para mantener compatibilidad con el código existente
+    init(currency_code: String, amount: String, compare_at: String? = nil) {
+        self.currency_code = currency_code
+        self.amount = amount
+        self.compare_at = compare_at
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case currency_code, amount, compare_at
+    }
     
     var formattedPrice: String {
         // Intentar convertir el monto a Double para formatear correctamente
@@ -116,6 +149,34 @@ struct ReachuPrice: Codable {
         
         // Fallback al formato básico si no se puede convertir
         return "\(currency_code) \(amount)"
+    }
+    
+    var hasDiscount: Bool {
+        guard let compareAtStr = compare_at, !compareAtStr.isEmpty else { return false }
+        
+        if let compareDouble = Double(compareAtStr), let amountDouble = Double(amount) {
+            return compareDouble > amountDouble
+        }
+        
+        return false
+    }
+    
+    var formattedCompareAtPrice: String? {
+        guard let compareAtStr = compare_at, !compareAtStr.isEmpty else { return nil }
+        
+        if let compareDouble = Double(compareAtStr) {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.currencyCode = currency_code
+            formatter.maximumFractionDigits = 0
+            formatter.minimumFractionDigits = 0
+            
+            if let formattedAmount = formatter.string(from: NSNumber(value: compareDouble)) {
+                return formattedAmount
+            }
+        }
+        
+        return nil
     }
 }
 
@@ -376,8 +437,28 @@ class ReachuGraphQLService {
         var price = ReachuPrice(currency_code: "USD", amount: "0.00")
         if let priceJson = json["price"] as? [String: Any] {
             let currencyCode = priceJson["currency_code"] as? String ?? "USD"
-            let amount = priceJson["amount"] as? String ?? "0.00"
-            price = ReachuPrice(currency_code: currencyCode, amount: amount)
+            
+            // Manejar amount como Int, Double o String
+            var amount = "0.00"
+            if let amountInt = priceJson["amount"] as? Int {
+                amount = String(amountInt)
+            } else if let amountDouble = priceJson["amount"] as? Double {
+                amount = String(format: "%.2f", amountDouble)
+            } else if let amountStr = priceJson["amount"] as? String {
+                amount = amountStr
+            }
+            
+            // Manejar compare_at como Int, Double, String o nil
+            var compareAt: String? = nil
+            if let compareAtInt = priceJson["compare_at"] as? Int {
+                compareAt = String(compareAtInt)
+            } else if let compareAtDouble = priceJson["compare_at"] as? Double {
+                compareAt = String(format: "%.2f", compareAtDouble)
+            } else if let compareAtStr = priceJson["compare_at"] as? String, !compareAtStr.isEmpty {
+                compareAt = compareAtStr
+            }
+            
+            price = ReachuPrice(currency_code: currencyCode, amount: amount, compare_at: compareAt)
         } else if let priceValue = json["price"] as? Double {
             price = ReachuPrice(currency_code: "USD", amount: String(format: "%.2f", priceValue))
         }
