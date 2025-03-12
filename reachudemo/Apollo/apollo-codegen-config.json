@@ -1,15 +1,15 @@
 {
   "schemaNamespace": "ReachuAPI",
   "input": {
-    "operationSearchPaths": ["reachudemo/Apollo/graphql/queries/*.graphql"],
-    "schemaSearchPaths": ["reachudemo/Apollo/graphql/schema.graphqls"]
+    "operationSearchPaths": ["/Users/angelo/reachuios/reachudemo/Apollo/graphql/queries/*.graphql"],
+    "schemaSearchPaths": ["/Users/angelo/reachuios/reachudemo/Apollo/graphql/schema.graphqls"]
   },
   "output": {
     "testMocks": {
       "none": {}
     },
     "schemaTypes": {
-      "path": "reachudemo/Apollo/ApolloCodegen",
+      "path": "/Users/angelo/reachuios/reachudemo/Apollo/ApolloCodegen",
       "moduleType": {
         "swiftPackageManager": {}
       }

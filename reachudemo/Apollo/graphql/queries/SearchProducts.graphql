@@ -1,23 +1,18 @@
-query SearchProducts($searchTerm: String!, $limit: Int, $offset: Int) {
+query SearchProducts {
   Channel {
-    SearchProducts(query: $searchTerm, limit: $limit, offset: $offset) {
+    GetProducts {
       id
       title
       description
       images {
-        id
         url
         order
+        id
       }
       price {
         currency_code
         amount
         compare_at
-      }
-      category
-      inventory {
-        available
-        in_stock
       }
     }
   }

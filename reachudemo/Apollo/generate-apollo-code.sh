@@ -23,6 +23,17 @@ mkdir -p reachudemo/Apollo/ApolloCodegen
 
 # Generar código Swift usando Apollo CLI
 echo "Generando código Swift a partir de las consultas GraphQL..."
-apollo client:codegen --config=reachudemo/Apollo/apollo-codegen-config.json
+
+# Descargar el CLI de Apollo iOS si no existe
+if [ ! -f ".apollo-ios/apollo-ios-cli" ]; then
+  echo "Descargando el CLI de Apollo iOS..."
+  mkdir -p .apollo-ios
+  curl -L https://github.com/apollographql/apollo-ios/releases/download/1.7.0/apollo-ios-cli.tar.gz -o .apollo-ios/apollo-ios-cli.tar.gz
+  tar -xzf .apollo-ios/apollo-ios-cli.tar.gz -C .apollo-ios
+  chmod +x .apollo-ios/apollo-ios-cli
+fi
+
+# Ejecutar el CLI de Apollo iOS
+.apollo-ios/apollo-ios-cli generate --path reachudemo/Apollo/apollo-codegen-config.json
 
 echo "Código generado con éxito en reachudemo/Apollo/ApolloCodegen" 

@@ -1,31 +1,26 @@
-query GetProductDetail($id: ID!) {
+query GetProductDetail($productId: Int!) {
   Channel {
-    GetProduct(id: $id) {
+    Products(product_ids: [$productId]) {
       id
-      title
-      description
       images {
-        id
         url
         order
+        id
       }
       price {
         currency_code
         amount
         compare_at
       }
-      category
+      title
+      description
+      categories {
+        id
+        name
+      }
       variants {
         id
         title
-        options {
-          name
-          value
-        }
-      }
-      inventory {
-        available
-        in_stock
       }
     }
   }

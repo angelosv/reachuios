@@ -1,6 +1,6 @@
-query GetProducts($limit: Int!, $offset: Int!, $category: String) {
+query GetProducts {
   Channel {
-    GetProducts(limit: $limit, offset: $offset, category: $category) {
+    GetProducts {
       id
       images {
         url
@@ -14,18 +14,13 @@ query GetProducts($limit: Int!, $offset: Int!, $category: String) {
       }
       title
       description
-      category
+      categories {
+        id
+        name
+      }
       variants {
         id
         title
-        options {
-          name
-          value
-        }
-      }
-      inventory {
-        available
-        in_stock
       }
     }
   }
