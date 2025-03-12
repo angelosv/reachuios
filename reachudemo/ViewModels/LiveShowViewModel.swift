@@ -7,13 +7,22 @@ class LiveShowViewModel: ObservableObject {
     @Published var currentShow: LiveStream?
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var products: [ReachuProduct] = []
+    @Published var currentProductIndex: Int = 0
     
     private let baseURL = "https://microservices.tipioapp.com"
     private var cancellables = Set<AnyCancellable>()
+    private let reachuService = ReachuGraphQLService()
+    
+    var currentProduct: ReachuProduct? {
+        guard !products.isEmpty else { return nil }
+        return products[safe: currentProductIndex]
+    }
     
     init() {
         // Load demo data on initialization
         loadDemoShow()
+        fetchProducts()
     }
     
     func fetchShowBySlug(_ slug: String) {
@@ -71,6 +80,34 @@ class LiveShowViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
+    func fetchProducts() {
+        reachuService.fetchProducts()
+            .receive(on: DispatchQueue.main)
+            .sink(
+                receiveCompletion: { completion in
+                    if case .failure(let error) = completion {
+                        print("Error fetching products: \(error)")
+                    }
+                },
+                receiveValue: { [weak self] products in
+                    guard let self = self else { return }
+                    self.products = products
+                    self.currentProductIndex = 0
+                }
+            )
+            .store(in: &cancellables)
+    }
+    
+    func nextProduct() {
+        guard !products.isEmpty else { return }
+        currentProductIndex = (currentProductIndex + 1) % products.count
+    }
+    
+    func previousProduct() {
+        guard !products.isEmpty else { return }
+        currentProductIndex = (currentProductIndex - 1 + products.count) % products.count
+    }
+    
     private func loadDemoShow() {
         // Create a demo LiveStream with data from the endpoint
         currentShow = LiveStream(
@@ -94,5 +131,12 @@ class LiveShowViewModel: ObservableObject {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+}
+
+// Extension to safely access array elements
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        return indices.contains(index) ? self[index] : nil
     }
 } 

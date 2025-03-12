@@ -57,6 +57,18 @@ struct HomeView: View {
                             liveStream: liveStream,
                             action: {
                                 showVideoPlayer = true
+                            },
+                            currentProduct: liveShowViewModel.currentProduct,
+                            onAddToCart: { product in
+                                print("Adding product to cart: \(product.title)")
+                                // Aquí puedes integrar con tu sistema de carrito
+                                // Por ejemplo, usando el modelo de StoreViewModel
+                            },
+                            onNextProduct: {
+                                liveShowViewModel.nextProduct()
+                            },
+                            onPreviousProduct: {
+                                liveShowViewModel.previousProduct()
                             }
                         )
                     }
