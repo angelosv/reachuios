@@ -23,141 +23,266 @@ struct VideoPlayerView: View {
     @State private var videoURL: URL?
     @State private var showProductsOverlay = false
     @State private var errorMessage: String = ""
+    @State private var showProductDetail = false
+    @State private var selectedProduct: ReachuProduct?
+    @State private var isPlaying = false
     
-    // Demo productos
-    let demoProducts = [
-        DemoProduct(name: "Crema Hidratante", price: "$49.99", image: "face.smile"),
-        DemoProduct(name: "Suero Vitamina C", price: "$59.99", image: "drop.fill"),
-        DemoProduct(name: "Protector Solar", price: "$29.99", image: "sun.max.fill")
-    ]
+    // Usar el LiveShowViewModel para acceder a productos reales
+    @StateObject private var viewModel = LiveShowViewModel()
     
     var body: some View {
-        ZStack {
-            Color.black.edgesIgnoringSafeArea(.all)
-            
-            // Video embebido o placeholder
-            if let url = videoURL {
-                WebViewVideoPlayer(videoURL: url)
-                    .edgesIgnoringSafeArea(.all)
-                    .onAppear {
-                        print("📹 WebViewVideoPlayer apareció con URL: \(url.absoluteString)")
-                        isLoading = false
-                    }
-            } else {
-                // Imagen de fondo como fallback si el video no carga
-                VStack {
-                    Image(systemName: "video.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 100, height: 100)
-                        .foregroundColor(.gray)
-                    
-                    Text("Loading video...")
-                        .foregroundColor(.white)
-                        .padding()
-                    
-                    if !errorMessage.isEmpty {
-                        Text(errorMessage)
-                            .foregroundColor(Color(hex: "#7300f9"))
-                            .font(.caption)
-                            .padding()
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black)
-            }
-            
-            // Controles superpuestos
-            VStack {
-                HStack {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Image(systemName: "chevron.left")
-                            .font(.system(size: 20, weight: .bold))
+        GeometryReader { geometry in
+            ZStack {
+                // Fondo negro siempre
+                Color.black.edgesIgnoringSafeArea(.all)
+                
+                // Video embebido con WebView
+                if let url = videoURL {
+                    WebViewVideoPlayer(videoURL: url, isPlaying: $isPlaying)
+                        .edgesIgnoringSafeArea(.all)
+                        .onAppear {
+                            isLoading = false
+                        }
+                } else {
+                    // Imagen de fondo como fallback si el video no carga
+                    VStack {
+                        Image(systemName: "video.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 100, height: 100)
+                            .foregroundColor(.gray)
+                        
+                        Text("Loading video...")
                             .foregroundColor(.white)
-                            .padding(12)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
+                            .padding()
+                        
+                        if !errorMessage.isEmpty {
+                            Text(errorMessage)
+                                .foregroundColor(Color(hex: "#7300f9"))
+                                .font(.caption)
+                                .padding()
+                        }
                     }
-                    .padding([.top, .leading], 16)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.black)
+                }
+                
+                // Botón grande de play/pause en el centro
+                if !isLoading {
+                    Button(action: {
+                        isPlaying.toggle()
+                    }) {
+                        Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 80, height: 80)
+                            .foregroundColor(.white.opacity(0.8))
+                            .background(Color.black.opacity(0.3))
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.5), radius: 10, x: 0, y: 0)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                
+                // Overlay de controles y productos
+                VStack(spacing: 0) {
+                    // Controles superiores
+                    HStack {
+                        Button(action: {
+                            presentationMode.wrappedValue.dismiss()
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(12)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding([.top, .leading], 16)
+                        
+                        Spacer()
+                        
+                        // Botón para mostrar/ocultar productos
+                        Button(action: {
+                            withAnimation {
+                                showProductsOverlay.toggle()
+                            }
+                        }) {
+                            Image(systemName: showProductsOverlay ? "bag.fill" : "bag")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding([.top, .trailing], 8)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "heart")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding([.top, .trailing], 8)
+                        
+                        Button(action: {}) {
+                            Image(systemName: "arrowshape.turn.up.right")
+                                .font(.system(size: 18))
+                                .foregroundColor(.white)
+                                .padding(10)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
+                        }
+                        .padding([.top, .trailing], 16)
+                    }
                     
                     Spacer()
                     
-                    // Botón para mostrar/ocultar productos
-                    Button(action: {
-                        withAnimation {
-                            showProductsOverlay.toggle()
+                    // Video Controls
+                    HStack(spacing: 40) {
+                        Button(action: {
+                            // Acción para retroceder 10 segundos
+                        }) {
+                            Image(systemName: "gobackward.10")
+                                .font(.system(size: 22))
+                                .foregroundColor(.white)
                         }
-                    }) {
-                        Image(systemName: showProductsOverlay ? "bag.fill" : "bag")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
+                        
+                        Button(action: {
+                            isPlaying.toggle()
+                        }) {
+                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                                .font(.system(size: 32))
+                                .foregroundColor(.white)
+                        }
+                        
+                        Button(action: {
+                            // Acción para avanzar 10 segundos
+                        }) {
+                            Image(systemName: "goforward.10")
+                                .font(.system(size: 22))
+                                .foregroundColor(.white)
+                        }
                     }
-                    .padding([.top, .trailing], 8)
+                    .padding(.vertical, 16)
+                    .padding(.horizontal, 24)
+                    .background(Color.black.opacity(0.6))
+                    .cornerRadius(20)
+                    .padding(.bottom, 24)
                     
-                    Button(action: {}) {
-                        Image(systemName: "heart")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .padding([.top, .trailing], 8)
-                    
-                    Button(action: {}) {
-                        Image(systemName: "arrowshape.turn.up.right")
-                            .font(.system(size: 16))
-                            .foregroundColor(.white)
-                            .padding(10)
-                            .background(Color.black.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .padding([.top, .trailing], 16)
-                }
-                
-                Spacer()
-                
-                // Demo de productos
-                if showProductsOverlay {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 15) {
-                            ForEach(demoProducts) { product in
-                                VideoProductCard(product: product)
+                    // Panel de productos opcional que se puede mostrar/ocultar
+                    if showProductsOverlay {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 15) {
+                                ForEach(viewModel.products) { product in
+                                    LiveShowProductCard(
+                                        product: product,
+                                        onAddToCart: {
+                                            // Simulación de agregar al carrito
+                                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                                            generator.impactOccurred()
+                                        }
+                                    )
+                                    .frame(width: 280)
+                                    .onTapGesture {
+                                        selectedProduct = product
+                                        showProductDetail = true
+                                    }
+                                }
                             }
+                            .padding()
                         }
-                        .padding()
+                        .background(Color.black.opacity(0.7))
+                        .cornerRadius(15)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                        .frame(height: 180)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
-                    .background(Color.black.opacity(0.7))
-                    .cornerRadius(15)
-                    .padding(.horizontal)
-                    .padding(.bottom, 30)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
-            }
-            .edgesIgnoringSafeArea(.all)
-            
-            if isLoading {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .foregroundColor(.white)
+                .edgesIgnoringSafeArea(.all)
+                
+                // Carrusel flotante en la parte inferior
+                if !viewModel.products.isEmpty {
+                    VStack {
+                        Spacer()
+                        LiveProductCarousel(
+                            products: viewModel.products,
+                            onProductTap: { product in
+                                selectedProduct = product
+                                showProductDetail = true
+                            },
+                            onAddToCart: { product in
+                                // Simulación de agregar al carrito
+                                let generator = UIImpactFeedbackGenerator(style: .medium)
+                                generator.impactOccurred()
+                            }
+                        )
+                        .padding(.bottom, geometry.safeAreaInsets.bottom > 0 ? geometry.safeAreaInsets.bottom : 16)
+                    }
+                }
+                
+                // Indicador de carga
+                if isLoading {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                        .foregroundColor(.white)
+                }
             }
         }
         .statusBar(hidden: true)
         .onAppear {
-            print("🔍 VideoPlayerView apareció para videoId: \(videoId)")
-            
             // Usar una URL de fallback por si la API falla
             let fallbackURL = URL(string: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")!
-            print("🔄 Configurando URL de fallback: \(fallbackURL.absoluteString)")
+            
+            // Configurar el reproductor inmediatamente con la URL de fallback
             self.videoURL = fallbackURL
             
             // Intentar cargar el video real
             fetchVideoURL()
+        }
+        .sheet(isPresented: $showProductDetail) {
+            if let product = selectedProduct {
+                // Usar el componente ProductDetailModal existente
+                ZStack {
+                    Color.white.edgesIgnoringSafeArea(.all)
+                    
+                    VStack {
+                        // Header con botón de cierre
+                        HStack {
+                            Button(action: {
+                                showProductDetail = false
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundColor(.black)
+                                    .padding(8)
+                                    .background(Color.gray.opacity(0.1))
+                                    .clipShape(Circle())
+                            }
+                            
+                            Spacer()
+                            
+                            Text("Product Details")
+                                .font(.headline)
+                            
+                            Spacer()
+                        }
+                        .padding()
+                        
+                        // Usar el ProductDetailModal existente
+                        ProductDetailModal(
+                            product: product,
+                            isPresented: $showProductDetail,
+                            onAddToCart: { product, size, color, quantity in
+                                showProductDetail = false
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
     
@@ -168,8 +293,6 @@ struct VideoPlayerView: View {
             return
         }
         
-        print("🔍 Comenzando petición a: \(url.absoluteString)")
-        
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
                 print("❌ Error en la petición: \(error.localizedDescription)")
@@ -177,10 +300,6 @@ struct VideoPlayerView: View {
                     self.errorMessage = "Network error: \(error.localizedDescription)"
                 }
                 return
-            }
-            
-            if let httpResponse = response as? HTTPURLResponse {
-                print("📡 Código de respuesta HTTP: \(httpResponse.statusCode)")
             }
             
             guard let data = data else {
@@ -191,27 +310,17 @@ struct VideoPlayerView: View {
                 return
             }
             
-            print("📦 Datos recibidos: \(data.count) bytes")
-            print("📄 Respuesta como string: \(String(data: data, encoding: .utf8) ?? "No se pudo convertir")")
-            
             do {
                 let response = try JSONDecoder().decode(VideoResponse.self, from: data)
-                print("✅ JSON decodificado: url=\(response.url), executed=\(response.executed), message=\(response.message)")
                 
                 DispatchQueue.main.async {
                     if let videoURL = URL(string: response.url) {
-                        print("🎬 URL de video obtenida: \(videoURL.absoluteString)")
                         self.videoURL = videoURL
                     } else {
-                        print("❌ No se pudo crear URL a partir de: \(response.url)")
                         self.errorMessage = "URL de video inválida"
                     }
                 }
             } catch {
-                print("❌ Error decodificando JSON: \(error.localizedDescription)")
-                if let jsonString = String(data: data, encoding: .utf8) {
-                    print("📄 JSON recibido: \(jsonString)")
-                }
                 DispatchQueue.main.async {
                     self.errorMessage = "Error al procesar datos: \(error.localizedDescription)"
                 }
@@ -220,8 +329,10 @@ struct VideoPlayerView: View {
     }
 }
 
+// Reproductor de video usando WebView
 struct WebViewVideoPlayer: UIViewRepresentable {
     let videoURL: URL
+    @Binding var isPlaying: Bool
     
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
@@ -238,67 +349,19 @@ struct WebViewVideoPlayer: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: WKWebView, context: Context) {
-        print("🔄 Actualizando WebView con URL: \(videoURL.absoluteString)")
-        
-        let videoString: String
-        
-        // Determinar el tipo de URL y crear el HTML adecuado
-        if videoURL.absoluteString.contains("vimeo.com") {
-            // Si es Vimeo, usar iframe para el reproductor de Vimeo
-            let vimeoId = videoURL.lastPathComponent
-            print("🎬 ID de Vimeo detectado: \(vimeoId)")
-            
-            videoString = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-                <style>
-                    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #000000; }
-                    .video-container { position: relative; width: 100%; height: 100%; }
-                    iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-                </style>
-            </head>
-            <body>
-                <div class="video-container">
-                    <iframe src="https://player.vimeo.com/video/\(vimeoId)?autoplay=1&loop=1&autopause=0" 
-                            frameborder="0" 
-                            allow="autoplay; fullscreen" 
-                            allowfullscreen
-                            style="position:absolute;top:0;left:0;width:100%;height:100%;">
-                    </iframe>
-                </div>
-            </body>
-            </html>
-            """
-        } else {
-            // Para videos MP4 u otros formatos directos
-            print("🎬 URL de video directo detectada")
-            
-            videoString = """
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-                <style>
-                    body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #000000; }
-                    .video-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-                    video { width: 100%; height: 100%; object-fit: contain; }
-                </style>
-            </head>
-            <body>
-                <div class="video-container">
-                    <video controls autoplay playsinline>
-                        <source src="\(videoURL.absoluteString)" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-            </body>
-            </html>
-            """
+        // Primero cargar el contenido si no está cargado
+        if context.coordinator.videoString == nil {
+            let videoString = createVideoHTML()
+            context.coordinator.videoString = videoString
+            uiView.loadHTMLString(videoString, baseURL: nil)
         }
         
-        uiView.loadHTMLString(videoString, baseURL: nil)
+        // Luego actualizar el estado de reproducción
+        if isPlaying {
+            uiView.evaluateJavaScript("document.getElementById('videoPlayer').play();", completionHandler: nil)
+        } else {
+            uiView.evaluateJavaScript("document.getElementById('videoPlayer').pause();", completionHandler: nil)
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -307,58 +370,81 @@ struct WebViewVideoPlayer: UIViewRepresentable {
     
     class Coordinator: NSObject, WKNavigationDelegate {
         var parent: WebViewVideoPlayer
+        var videoString: String?
         
         init(_ parent: WebViewVideoPlayer) {
             self.parent = parent
         }
         
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-            print("✅ WebView cargó correctamente")
-        }
-        
-        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            print("❌ Error cargando WebView: \(error.localizedDescription)")
+            // Script para forzar la reproducción automática cuando se solicite
+            webView.evaluateJavaScript("""
+                var video = document.querySelector('video');
+                if (video) {
+                    video.muted = true;
+                    if (\(parent.isPlaying)) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                    
+                    // Listeners para mantener la reproducción sincronizada
+                    video.addEventListener('play', function() {
+                        window.webkit.messageHandlers.playing.postMessage(true);
+                    });
+                    video.addEventListener('pause', function() {
+                        window.webkit.messageHandlers.playing.postMessage(false);
+                    });
+                }
+            """, completionHandler: nil)
         }
     }
-}
-
-struct VideoProductCard: View {
-    let product: DemoProduct
     
-    var body: some View {
-        VStack {
-            Image(systemName: product.image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 50, height: 50)
-                .padding()
-                .background(Color.white.opacity(0.2))
-                .clipShape(Circle())
-            
-            Text(product.name)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-            
-            Text(product.price)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-            
-            Button(action: {}) {
-                Text("Add")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 15)
-                    .padding(.vertical, 8)
-                    .background(Color(hex: "#7300f9"))
-                    .cornerRadius(20)
-            }
-        }
-        .frame(width: 120)
-        .padding()
-        .background(Color.gray.opacity(0.2))
-        .cornerRadius(15)
+    private func createVideoHTML() -> String {
+        // Para videos MP4 u otros formatos directos
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #000000; }
+                .video-container { position: relative; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+                video { width: 100%; height: 100%; object-fit: contain; background: #000; }
+                .controls { display: none; }
+            </style>
+        </head>
+        <body>
+            <div class="video-container">
+                <video id="videoPlayer" autoplay muted playsinline loop>
+                    <source src="\(videoURL.absoluteString)" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <script>
+                // Cuando la página esté lista
+                document.addEventListener('DOMContentLoaded', function() {
+                    var video = document.getElementById('videoPlayer');
+                    
+                    // Inicialmente establecemos el video según el valor del binding
+                    if (\(isPlaying)) {
+                        video.play();
+                    } else {
+                        video.load();
+                        video.pause();
+                    }
+                    
+                    // Prevenir que el video tome toda la pantalla en iOS
+                    video.addEventListener('webkitbeginfullscreen', function(e) {
+                        e.preventDefault();
+                        video.webkitExitFullscreen();
+                        return false;
+                    });
+                });
+            </script>
+        </body>
+        </html>
+        """
     }
 }
 
