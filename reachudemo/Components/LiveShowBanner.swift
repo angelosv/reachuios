@@ -6,6 +6,7 @@ struct LiveShowBanner: View {
     
     // Main app color
     let primaryColor = Color(hex: "#7300f9")
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         Button(action: action) {
@@ -15,7 +16,7 @@ struct LiveShowBanner: View {
                     switch phase {
                         case .empty:
                             Rectangle()
-                                .fill(Color.gray.opacity(0.3))
+                                .fill(colorScheme == .dark ? Color.gray.opacity(0.5) : Color.gray.opacity(0.3))
                                 .frame(width: 120, height: 90)
                                 .cornerRadius(10)
                                 .overlay(
@@ -52,16 +53,16 @@ struct LiveShowBanner: View {
                                 )
                         case .failure:
                             Rectangle()
-                                .fill(Color.gray.opacity(0.3))
+                                .fill(colorScheme == .dark ? Color.gray.opacity(0.5) : Color.gray.opacity(0.3))
                                 .frame(width: 120, height: 90)
                                 .cornerRadius(10)
                                 .overlay(
                                     Image(systemName: "photo")
-                                        .foregroundColor(.gray)
+                                        .foregroundColor(colorScheme == .dark ? Color.white.opacity(0.7) : Color.gray)
                                 )
                         @unknown default:
                             Rectangle()
-                                .fill(Color.gray.opacity(0.3))
+                                .fill(colorScheme == .dark ? Color.gray.opacity(0.5) : Color.gray.opacity(0.3))
                                 .frame(width: 120, height: 90)
                                 .cornerRadius(10)
                     }
@@ -79,25 +80,26 @@ struct LiveShowBanner: View {
                         .fontWeight(.semibold)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
+                        .foregroundColor(colorScheme == .dark ? .white : .primary)
                     
                     HStack {
                         if let hostName = liveStream.hostName {
                             Image(systemName: "person.circle.fill")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .secondary)
                             Text(hostName)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .secondary)
                         }
                         
                         Spacer()
                         
                         Image(systemName: "clock.fill")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .secondary)
                         Text(DateFormatter.livestreamTimeFormatter.string(from: liveStream.createdAt))
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(colorScheme == .dark ? .white.opacity(0.7) : .secondary)
                     }
                 }
                 
@@ -105,9 +107,13 @@ struct LiveShowBanner: View {
             }
             .frame(maxWidth: .infinity)
             .padding(10)
-            .background(Color.white)
+            .background(colorScheme == .dark ? Color.black.opacity(0.6) : Color.white)
             .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+            .shadow(color: colorScheme == .dark ? Color.purple.opacity(0.3) : Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(colorScheme == .dark ? Color.purple.opacity(0.3) : Color.clear, lineWidth: 1)
+            )
         }
         .padding(.horizontal)
     }
@@ -138,10 +144,22 @@ extension DateFormatter {
         category: "Health"
     )
     
-    return LiveShowBanner(
-        liveStream: demoLiveStream,
-        action: {}
-    )
-    .padding()
-    .background(Color.gray.opacity(0.1))
+    return Group {
+        LiveShowBanner(
+            liveStream: demoLiveStream,
+            action: {}
+        )
+        .padding()
+        .background(Color.gray.opacity(0.1))
+        .previewDisplayName("Light Mode")
+        
+        LiveShowBanner(
+            liveStream: demoLiveStream,
+            action: {}
+        )
+        .padding()
+        .background(Color.black)
+        .environment(\.colorScheme, .dark)
+        .previewDisplayName("Dark Mode")
+    }
 } 
