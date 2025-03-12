@@ -1,6 +1,153 @@
 import SwiftUI
 import Combine
 
+// MARK: - Categories Section Component
+/// Displays a horizontal scrollable list of categories
+struct CategoriesSection: View {
+    let categories: [String]
+    let primaryColor: Color
+    let onCategoryTap: (String) -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            SectionHeader(title: "CATEGORIES", primaryColor: primaryColor)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 15) {
+                    ForEach(categories, id: \.self) { category in
+                        CategoryCard(category: category)
+                            .onTapGesture {
+                                onCategoryTap(category)
+                            }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+}
+
+// MARK: - Trending Section Component
+/// Displays a vertical list of trending articles
+struct TrendingSection: View {
+    let articles: [Article]
+    let primaryColor: Color
+    
+    var body: some View {
+        VStack(alignment: .leading) {
+            SectionHeader(title: "TRENDING NOW", primaryColor: primaryColor)
+            
+            VStack(spacing: 15) {
+                ForEach(articles) { article in
+                    TrendingArticleRow(article: article)
+                }
+            }
+            .padding(.horizontal)
+        }
+    }
+}
+
+// MARK: - LiveShowSection Component
+/// Displays the live show banner with current product
+struct LiveShowSection: View {
+    let liveStream: LiveStream
+    let currentProduct: ReachuProduct?
+    let primaryColor: Color
+    let onShowTap: () -> Void
+    let onAddToCart: (ReachuProduct) -> Void
+    let onNextProduct: () -> Void
+    let onPreviousProduct: () -> Void
+    
+    var body: some View {
+        LiveShowBanner(
+            liveStream: liveStream,
+            action: onShowTap,
+            currentProduct: currentProduct,
+            onAddToCart: onAddToCart,
+            onNextProduct: onNextProduct,
+            onPreviousProduct: onPreviousProduct
+        )
+    }
+}
+
+// MARK: - Section Header Component
+/// Reusable section header with title and "See All" button
+struct SectionHeader: View {
+    let title: String
+    let primaryColor: Color
+    var action: (() -> Void)? = nil
+    
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.headline)
+                .fontWeight(.bold)
+            
+            Spacer()
+            
+            Button(action: {
+                action?()
+            }) {
+                Text("See All")
+                    .foregroundColor(primaryColor)
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Home Content View
+/// Main content of the home screen
+struct HomeContentView: View {
+    @ObservedObject var viewModel: ArticleViewModel
+    @ObservedObject var liveShowViewModel: LiveShowViewModel
+    let primaryColor: Color
+    let onShowTap: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            // Featured Articles
+            FeaturedArticlesView(viewModel: viewModel)
+            
+            // Categories Section
+            CategoriesSection(
+                categories: viewModel.categories,
+                primaryColor: primaryColor,
+                onCategoryTap: { category in
+                    viewModel.fetchArticlesByCategory(category)
+                }
+            )
+            
+            // Live Show Banner
+            if let liveStream = liveShowViewModel.currentShow {
+                LiveShowSection(
+                    liveStream: liveStream,
+                    currentProduct: liveShowViewModel.currentProduct,
+                    primaryColor: primaryColor,
+                    onShowTap: onShowTap,
+                    onAddToCart: { product in
+                        print("Adding product to cart: \(product.title)")
+                        // Aquí puedes integrar con tu sistema de carrito
+                    },
+                    onNextProduct: {
+                        liveShowViewModel.nextProduct()
+                    },
+                    onPreviousProduct: {
+                        liveShowViewModel.previousProduct()
+                    }
+                )
+            }
+            
+            // Trending Now Section
+            TrendingSection(
+                articles: viewModel.trendingArticles,
+                primaryColor: primaryColor
+            )
+        }
+        .padding(.vertical)
+    }
+}
+
 struct HomeView: View {
     // MARK: - Properties
     @StateObject private var viewModel = ArticleViewModel()
@@ -16,90 +163,14 @@ struct HomeView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // Featured Articles
-                    FeaturedArticlesView(viewModel: viewModel)
-                    
-                    // Categories Section
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text("CATEGORIES")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                // Action for See All
-                            }) {
-                                Text("See All")
-                                    .foregroundColor(primaryColor)
-                            }
-                        }
-                        .padding(.horizontal)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 15) {
-                                ForEach(viewModel.categories, id: \.self) { category in
-                                    CategoryCard(category: category)
-                                        .onTapGesture {
-                                            viewModel.fetchArticlesByCategory(category)
-                                        }
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
+                HomeContentView(
+                    viewModel: viewModel,
+                    liveShowViewModel: liveShowViewModel,
+                    primaryColor: primaryColor,
+                    onShowTap: {
+                        showVideoPlayer = true
                     }
-                    
-                    // Live Show Banner
-                    if let liveStream = liveShowViewModel.currentShow {
-                        LiveShowBanner(
-                            liveStream: liveStream,
-                            action: {
-                                showVideoPlayer = true
-                            },
-                            currentProduct: liveShowViewModel.currentProduct,
-                            onAddToCart: { product in
-                                print("Adding product to cart: \(product.title)")
-                                // Aquí puedes integrar con tu sistema de carrito
-                                // Por ejemplo, usando el modelo de StoreViewModel
-                            },
-                            onNextProduct: {
-                                liveShowViewModel.nextProduct()
-                            },
-                            onPreviousProduct: {
-                                liveShowViewModel.previousProduct()
-                            }
-                        )
-                    }
-                    
-                    // Trending Now Section
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text("TRENDING NOW")
-                                .font(.headline)
-                                .fontWeight(.bold)
-                            
-                            Spacer()
-                            
-                            Button(action: {
-                                // Action for See All
-                            }) {
-                                Text("See All")
-                                    .foregroundColor(primaryColor)
-                            }
-                        }
-                        .padding(.horizontal)
-                        
-                        VStack(spacing: 15) {
-                            ForEach(viewModel.trendingArticles) { article in
-                                TrendingArticleRow(article: article)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.vertical)
+                )
             }
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
