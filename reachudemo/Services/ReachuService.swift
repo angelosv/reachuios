@@ -51,7 +51,8 @@ class ReachuService {
         query: String,
         variables: [String: Any]? = nil
     ) -> AnyPublisher<T, NetworkError> {
-        guard let url = URL(string: "https://api.reachu.io/graphql") else {
+        let urlString = "https://api.reachu.io/graphql"
+        guard let url = URL(string: urlString) else {
             return Fail(error: NetworkError.invalidURL).eraseToAnyPublisher()
         }
         

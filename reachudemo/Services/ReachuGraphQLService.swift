@@ -392,7 +392,8 @@ class ReachuGraphQLService {
     }
     
     private func performGraphQLRequest(query: String) -> AnyPublisher<Data, Error> {
-        var request = URLRequest(url: endpointURL)
+        let url = endpointURL
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         request.addValue(authToken, forHTTPHeaderField: "Authorization")
@@ -400,9 +401,9 @@ class ReachuGraphQLService {
         let body: [String: Any] = ["query": query]
         request.httpBody = try? JSONSerialization.data(withJSONObject: body)
         
-        print("🚀 Enviando solicitud GraphQL a \(endpointURL)")
+        print("🚀 Enviando solicitud GraphQL a \(url)")
         print("🔑 Usando token: \(authToken)")
-        print("📝 Query: \(query)")
+        print("�� Query: \(query)")
         
         return URLSession.shared.dataTaskPublisher(for: request)
             .tryMap { data, response -> Data in

@@ -20,7 +20,8 @@ class LiveShowViewModel: ObservableObject {
         isLoading = true
         error = nil
         
-        guard let url = URL(string: "\(baseURL)/stream/by-slug-or-streamid") else {
+        let urlString = "\(baseURL)/stream/by-slug-or-streamid"
+        guard let url = URL(string: urlString) else {
             self.error = URLError(.badURL)
             self.isLoading = false
             return

@@ -16,6 +16,41 @@ struct StoreView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
+                    // Promotional Banner
+                    ZStack(alignment: .leading) {
+                        Rectangle()
+                            .fill(primaryColor)
+                            .cornerRadius(12)
+                        
+                        HStack {
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text("Get Winter Discount")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(.white)
+                                
+                                Text("20% Off")
+                                    .font(.title)
+                                    .fontWeight(.black)
+                                    .foregroundColor(.white)
+                                
+                                Text("For Children")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.9))
+                            }
+                            .padding(.leading)
+                            
+                            Spacer()
+                            
+                            Image(systemName: "person.crop.rectangle.badge.plus")
+                                .font(.system(size: 40))
+                                .foregroundColor(.white.opacity(0.8))
+                                .padding(.trailing)
+                        }
+                    }
+                    .frame(height: 120)
+                    .padding(.horizontal)
+                    
                     if viewModel.isLoading {
                         VStack {
                             ProgressView()
@@ -48,9 +83,87 @@ struct StoreView: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 200)
                     } else {
-                        // Grid of Reachu products
+                        // Featured Products Section
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("Featured")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                
+                                Spacer()
+                                
+                                Button(action: {}) {
+                                    Text("See All")
+                                        .font(.subheadline)
+                                        .foregroundColor(primaryColor)
+                                }
+                            }
+                            .padding(.horizontal)
+                            
+                            // Featured products in a horizontal scrollview
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 16) {
+                                    // Display first 5 products as featured
+                                    ForEach(Array(viewModel.reachuProducts.prefix(5))) { product in
+                                        FeaturedProductCard(
+                                            product: product,
+                                            onTap: {
+                                                selectedProduct = product
+                                                showProductDetail = true
+                                            },
+                                            onFavorite: {}
+                                        )
+                                        .frame(width: 160)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 5)
+                            }
+                        }
+                        
+                        // Most Popular Section
+                        VStack(alignment: .leading, spacing: 10) {
+                            HStack {
+                                Text("Most Popular")
+                                    .font(.headline)
+                                    .fontWeight(.bold)
+                                
+                                Spacer()
+                                
+                                Button(action: {}) {
+                                    Text("See All")
+                                        .font(.subheadline)
+                                        .foregroundColor(primaryColor)
+                                }
+                            }
+                            .padding(.horizontal)
+                            
+                            // Most popular products in a horizontal scrollview
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 16) {
+                                    // Display next 5 products as most popular
+                                    ForEach(Array(viewModel.reachuProducts.dropFirst(5).prefix(5))) { product in
+                                        PopularProductCard(
+                                            product: product,
+                                            onTap: {
+                                                selectedProduct = product
+                                                showProductDetail = true
+                                            },
+                                            onAddToCart: {
+                                                addToCart(product: product, size: "M", color: "Default", quantity: 1)
+                                            }
+                                        )
+                                        .frame(height: 120)
+                                    }
+                                }
+                                .padding(.horizontal)
+                                .padding(.bottom, 5)
+                            }
+                        }
+                        
+                        // All Products Section
                         VStack(alignment: .leading) {
-                            Text("PRODUCTS")
+                            Text("All Products")
                                 .font(.headline)
                                 .fontWeight(.bold)
                                 .padding(.horizontal)
@@ -63,13 +176,10 @@ struct StoreView: View {
                                     ReachuProductCard(
                                         product: product,
                                         onTap: {
-                                            // When tapped, show details
                                             selectedProduct = product
                                             showProductDetail = true
                                         },
                                         onAddToCart: {
-                                            // When Add to Cart pressed, add directly
-                                            // Add default size and color for testing
                                             addToCart(product: product, size: "M", color: "Broken White", quantity: 1)
                                         }
                                     )

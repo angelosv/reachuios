@@ -162,7 +162,8 @@ struct VideoPlayerView: View {
     }
     
     private func fetchVideoURL() {
-        guard let url = URL(string: "https://microservices.tipioapp.com/videos/video/cosmedbeauty-desember2024") else {
+        let urlString = "https://microservices.tipioapp.com/videos/video/cosmedbeauty-desember2024"
+        guard let url = URL(string: urlString) else {
             print("❌ Error: URL de API inválida")
             return
         }
