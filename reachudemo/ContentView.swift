@@ -10,6 +10,7 @@ import CoreData
 
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @State private var showGraphQLExplorer = false
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
@@ -27,6 +28,21 @@ struct ContentView: View {
                     }
                 }
                 .onDelete(perform: deleteItems)
+
+                // Añadir sección de herramientas para desarrolladores
+                Section(header: Text("Herramientas de desarrollo")) {
+                    Button(action: {
+                        showGraphQLExplorer = true
+                    }) {
+                        HStack {
+                            Image(systemName: "magnifyingglass.circle")
+                                .foregroundColor(.blue)
+                                .font(.title2)
+                            Text("Explorador de Schema GraphQL")
+                                .fontWeight(.medium)
+                        }
+                    }
+                }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -38,7 +54,11 @@ struct ContentView: View {
                     }
                 }
             }
-            Text("Select an item")
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("Reachu Demo")
+            .sheet(isPresented: $showGraphQLExplorer) {
+                GraphQLSchemaExplorerView()
+            }
         }
     }
 

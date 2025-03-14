@@ -256,6 +256,11 @@ class ReachuGraphQLService {
         }
     }
     
+    // Método para obtener el token de autenticación de manera controlada
+    func getAuthToken() -> String {
+        return authToken
+    }
+    
     func fetchProducts() -> AnyPublisher<[ReachuProduct], Error> {
         print("🔍 Iniciando solicitud GraphQL para obtener productos")
         
