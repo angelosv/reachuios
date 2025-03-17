@@ -54,10 +54,11 @@ struct ContentView: View {
                     }
                 }
             }
+            .overlay(debugButton())
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("Reachu Demo")
             .sheet(isPresented: $showGraphQLExplorer) {
-                GraphQLSchemaExplorerView()
+                SchemaExplorerView()
             }
         }
     }
@@ -91,6 +92,43 @@ struct ContentView: View {
                 fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
             }
         }
+    }
+}
+
+// MARK: - Debugging Tools
+extension ContentView {
+    @ViewBuilder
+    func debugButton() -> some View {
+        #if DEBUG
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                Menu {
+                    Button(action: {
+                        showGraphQLExplorer = true
+                    }) {
+                        Label("Explorador GraphQL", systemImage: "magnifyingglass")
+                    }
+                    // Otros elementos de debug si los necesitas
+                } label: {
+                    Image(systemName: "ladybug.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(.white)
+                        .frame(width: 44, height: 44)
+                        .background(Color.gray.opacity(0.8))
+                        .clipShape(Circle())
+                        .shadow(radius: 4)
+                }
+                .padding()
+            }
+        }
+        .sheet(isPresented: $showGraphQLExplorer) {
+            SchemaExplorerView()
+        }
+        #else
+        EmptyView()
+        #endif
     }
 }
 

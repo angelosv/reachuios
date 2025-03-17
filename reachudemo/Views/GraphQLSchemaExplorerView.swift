@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct GraphQLSchemaExplorerView: View {
-    @StateObject private var viewModel = SchemaExplorerViewModel()
+    @StateObject private var viewModel = GraphQLSchemaExplorerViewModel()
     @State private var selectedTypeIndex: Int?
     @State private var selectedSection: SchemaSection = .types
     
@@ -93,7 +93,7 @@ struct GraphQLSchemaExplorerView: View {
                     selection: $selectedTypeIndex
                 ) {
                     HStack {
-                        Text(viewModel.types[index].name)
+                        Text(viewModel.types[index].name ?? "Unknown")
                             .fontWeight(.medium)
                         
                         Spacer()
@@ -198,7 +198,7 @@ struct TypeDetailView: View {
                 // Encabezado
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
-                        Text(type.name)
+                        Text(type.name ?? "Unknown Type")
                             .font(.title)
                             .fontWeight(.bold)
                         
@@ -247,7 +247,7 @@ struct TypeDetailView: View {
             }
             .padding()
         }
-        .navigationTitle(type.name)
+        .navigationTitle(type.name ?? "Type Details")
         .navigationBarTitleDisplayMode(.inline)
     }
     
@@ -403,7 +403,7 @@ struct TypeDetailView: View {
                 .font(.headline)
             
             ForEach(interfaces, id: \.name) { interface in
-                Text(interface.name)
+                Text(interface.name ?? "Unknown Interface")
                     .fontWeight(.semibold)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 10)
@@ -610,7 +610,7 @@ struct FieldDetailView: View {
 }
 
 // ViewModel para el explorador de schema
-class SchemaExplorerViewModel: ObservableObject {
+class GraphQLSchemaExplorerViewModel: ObservableObject {
     @Published var types: [GraphQLType] = []
     @Published var queries: [GraphQLField] = []
     @Published var mutations: [GraphQLField] = []
@@ -636,8 +636,8 @@ class SchemaExplorerViewModel: ObservableObject {
                 receiveValue: { [weak self] schema in
                     // Tipos
                     self?.types = schema.types
-                        .filter { !$0.name.starts(with: "__") }
-                        .sorted { $0.name < $1.name }
+                        .filter { !($0.name?.starts(with: "__") ?? false) }
+                        .sorted { ($0.name ?? "") < ($1.name ?? "") }
                     
                     // Consultas
                     if let queryType = schema.rootQueryType, let fields = queryType.fields {

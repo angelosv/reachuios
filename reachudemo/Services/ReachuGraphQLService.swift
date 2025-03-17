@@ -514,7 +514,12 @@ class ReachuGraphQLService {
         )
     }
     
-    private func performGraphQLRequest(query: String) -> AnyPublisher<Data, Error> {
+    // MARK: - GraphQL Request Helper
+    
+    /// Realiza una petición GraphQL genérica
+    /// - Parameter query: La consulta GraphQL a ejecutar
+    /// - Returns: Un publisher que emite los datos de respuesta o un error
+    internal func performGraphQLRequest(query: String) -> AnyPublisher<Data, Error> {
         let url = endpointURL
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

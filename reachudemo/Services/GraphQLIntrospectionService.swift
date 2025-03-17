@@ -5,11 +5,8 @@ class GraphQLIntrospectionService {
     // Singleton para acceso global
     static let shared = GraphQLIntrospectionService()
     
-    // URL del endpoint GraphQL (usando la misma que ReachuGraphQLService)
-    private let endpoint = URL(string: "https://api.reachu.io/graphql")!
-    
-    // Token de autenticación (similar a ReachuGraphQLService)
-    private var token = "YOUR_AUTH_TOKEN"
+    // Servicio GraphQL existente que usaremos para realizar las consultas
+    private let graphQLService = ReachuGraphQLService()
     
     // Almacena en caché el schema una vez obtenido
     private var cachedSchema: GraphQLSchema?
@@ -17,17 +14,10 @@ class GraphQLIntrospectionService {
     // Previene la inicialización externa
     private init() {}
     
-    // Método para configurar el token externamente
-    func configure(with token: String) {
-        self.token = token
-        // Al cambiar el token invalidamos la caché
-        self.cachedSchema = nil
-    }
-    
-    /// Realiza una consulta de introspección para obtener el schema completo de GraphQL
-    /// - Returns: Un publisher que emite el schema o un error
+    /// Método para obtener el esquema GraphQL completo
+    /// - Returns: Un publisher que emite el esquema o un error
     func fetchSchema() -> AnyPublisher<GraphQLSchema, Error> {
-        // Si ya tenemos el schema en caché, lo devolvemos inmediatamente
+        // Si ya tenemos el esquema en caché, lo devolvemos inmediatamente
         if let cachedSchema = cachedSchema {
             return Just(cachedSchema)
                 .setFailureType(to: Error.self)
@@ -40,375 +30,82 @@ class GraphQLIntrospectionService {
           __schema {
             queryType {
               name
-              fields {
-                name
-                description
-                args {
-                  name
-                  description
-                  type {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                                ofType {
-                                  kind
-                                  name
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                  defaultValue
-                }
-                type {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                isDeprecated
-                deprecationReason
-              }
             }
             mutationType {
               name
-              fields {
-                name
-                description
-                args {
-                  name
-                  description
-                  type {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                                ofType {
-                                  kind
-                                  name
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                  defaultValue
-                }
-                type {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                isDeprecated
-                deprecationReason
-              }
             }
             subscriptionType {
               name
-              fields {
-                name
-                description
-                args {
-                  name
-                  description
-                  type {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                                ofType {
-                                  kind
-                                  name
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                  defaultValue
-                }
-                type {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                isDeprecated
-                deprecationReason
-              }
             }
             types {
-              kind
-              name
-              description
-              fields {
-                name
-                description
-                args {
-                  name
-                  description
-                  type {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                                ofType {
-                                  kind
-                                  name
-                                }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                  defaultValue
-                }
-                type {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                isDeprecated
-                deprecationReason
-              }
-              inputFields {
-                name
-                description
-                type {
-                  kind
-                  name
-                  ofType {
-                    kind
-                    name
-                    ofType {
-                      kind
-                      name
-                      ofType {
-                        kind
-                        name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-                defaultValue
-              }
-              interfaces {
-                name
-              }
-              enumValues {
-                name
-                description
-                isDeprecated
-                deprecationReason
-              }
-              possibleTypes {
-                name
-              }
+              ...FullType
             }
             directives {
               name
               description
               locations
               args {
+                ...InputValue
+              }
+            }
+          }
+        }
+
+        fragment FullType on __Type {
+          kind
+          name
+          description
+          fields(includeDeprecated: true) {
+            name
+            description
+            args {
+              ...InputValue
+            }
+            type {
+              ...TypeRef
+            }
+            isDeprecated
+            deprecationReason
+          }
+          inputFields {
+            ...InputValue
+          }
+          interfaces {
+            ...TypeRef
+          }
+          enumValues(includeDeprecated: true) {
+            name
+            description
+            isDeprecated
+            deprecationReason
+          }
+          possibleTypes {
+            ...TypeRef
+          }
+        }
+
+        fragment InputValue on __InputValue {
+          name
+          description
+          type {
+            ...TypeRef
+          }
+          defaultValue
+        }
+
+        fragment TypeRef on __Type {
+          kind
+          name
+          ofType {
+            kind
+            name
+            ofType {
+              kind
+              name
+              ofType {
+                kind
                 name
-                description
-                type {
+                ofType {
                   kind
                   name
                   ofType {
@@ -420,133 +117,113 @@ class GraphQLIntrospectionService {
                       ofType {
                         kind
                         name
-                        ofType {
-                          kind
-                          name
-                          ofType {
-                            kind
-                            name
-                            ofType {
-                              kind
-                              name
-                              ofType {
-                                kind
-                                name
-                              }
-                            }
-                          }
-                        }
                       }
                     }
                   }
                 }
-                defaultValue
               }
             }
           }
         }
         """
         
-        // Preparamos la solicitud GraphQL
-        var request = URLRequest(url: endpoint)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
-        // Creamos el cuerpo JSON con la consulta
-        let body: [String: Any] = [
-            "query": introspectionQuery
-        ]
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body, options: [])
-        } catch {
-            return Fail(error: error).eraseToAnyPublisher()
-        }
-        
-        // Realizamos la solicitud
-        return URLSession.shared.dataTaskPublisher(for: request)
-            .tryMap { data, response -> Data in
-                guard let httpResponse = response as? HTTPURLResponse,
-                      (200...299).contains(httpResponse.statusCode) else {
-                    throw NSError(domain: "GraphQLError", code: 0, userInfo: [
-                        NSLocalizedDescriptionKey: "Error en la respuesta HTTP"
-                    ])
-                }
-                return data
-            }
-            .decode(type: IntrospectionResponse.self, decoder: JSONDecoder())
-            .map { response -> GraphQLSchema in
-                // Guardamos en caché para futuras consultas
-                self.cachedSchema = response.data.__schema
+        // Utilizamos el servicio GraphQL existente para realizar la consulta
+        return graphQLService.performGraphQLRequest(query: introspectionQuery)
+            .tryMap { data -> GraphQLSchema in
+                let response = try JSONDecoder().decode(IntrospectionResponse.self, from: data)
                 return response.data.__schema
             }
-            .eraseToAnyPublisher()
-    }
-    
-    /// Obtiene información sobre un tipo específico del schema
-    /// - Parameter typeName: Nombre del tipo a buscar
-    /// - Returns: Un publisher que emite el tipo o un error
-    func getTypeInfo(typeName: String) -> AnyPublisher<GraphQLType, Error> {
-        return fetchSchema()
-            .tryMap { schema -> GraphQLType in
-                guard let type = schema.findType(name: typeName) else {
-                    throw NSError(domain: "GraphQLError", code: 0, userInfo: [
-                        NSLocalizedDescriptionKey: "Tipo no encontrado: \(typeName)"
-                    ])
-                }
-                return type
+            .handleEvents(receiveOutput: { [weak self] schema in
+                // Guardamos el esquema en caché
+                self?.cachedSchema = schema
+                print("✅ Schema GraphQL obtenido con éxito: \(schema.types.count) tipos")
+            })
+            .catch { error -> AnyPublisher<GraphQLSchema, Error> in
+                print("❌ Error obteniendo schema GraphQL: \(error.localizedDescription)")
+                return Fail(error: error).eraseToAnyPublisher()
             }
             .eraseToAnyPublisher()
     }
     
-    /// Obtiene todos los tipos disponibles en el schema
-    /// - Returns: Un publisher que emite la lista de tipos o un error
+    /// Obtiene la lista de todos los tipos definidos en el esquema
+    /// - Returns: Publisher que emite la lista de tipos o un error
     func getAllTypes() -> AnyPublisher<[GraphQLType], Error> {
         return fetchSchema()
             .map { schema in
-                // Filtramos los tipos internos que comienzan con "__"
-                return schema.types.filter { !$0.name.starts(with: "__") }
+                return schema.types
+                    .filter { !($0.name?.starts(with: "__") ?? false) } // Filtramos tipos internos
+                    .sorted { ($0.name ?? "") < ($1.name ?? "") }       // Ordenamos alfabéticamente
             }
             .eraseToAnyPublisher()
     }
     
-    /// Obtiene todos los tipos objeto (no escalares, no entradas, etc.)
-    /// - Returns: Un publisher que emite la lista de tipos objeto o un error
-    func getObjectTypes() -> AnyPublisher<[GraphQLType], Error> {
+    /// Obtiene información detallada sobre un tipo específico
+    /// - Parameter typeName: Nombre del tipo a buscar
+    /// - Returns: Publisher que emite el tipo encontrado o un error
+    func getTypeInfo(typeName: String) -> AnyPublisher<GraphQLType?, Error> {
         return fetchSchema()
             .map { schema in
-                return schema.objectTypes
+                return schema.types.first { $0.name == typeName }
             }
             .eraseToAnyPublisher()
     }
     
-    /// Obtiene todas las consultas disponibles en el schema
-    /// - Returns: Un publisher que emite la lista de campos de consulta o un error
+    /// Obtiene la lista de todas las consultas disponibles
+    /// - Returns: Publisher que emite la lista de campos de consulta o un error
     func getQueries() -> AnyPublisher<[GraphQLField], Error> {
         return fetchSchema()
-            .tryMap { schema -> [GraphQLField] in
-                guard let queryType = schema.rootQueryType, let fields = queryType.fields else {
-                    throw NSError(domain: "GraphQLError", code: 0, userInfo: [
-                        NSLocalizedDescriptionKey: "No se encontraron consultas en el schema"
-                    ])
+            .map { schema -> [GraphQLField] in
+                if let rootQueryName = schema.queryType.name,
+                   let rootQueryType = schema.types.first(where: { $0.name == rootQueryName }) {
+                    return rootQueryType.fields ?? []
                 }
-                return fields
+                return []
             }
             .eraseToAnyPublisher()
     }
     
-    /// Obtiene todas las mutaciones disponibles en el schema
-    /// - Returns: Un publisher que emite la lista de campos de mutación o un error
+    /// Obtiene la lista de todas las mutaciones disponibles
+    /// - Returns: Publisher que emite la lista de mutaciones o un error
     func getMutations() -> AnyPublisher<[GraphQLField], Error> {
         return fetchSchema()
-            .tryMap { schema -> [GraphQLField] in
-                guard let mutationType = schema.mutationRootType, let fields = mutationType.fields else {
-                    throw NSError(domain: "GraphQLError", code: 0, userInfo: [
-                        NSLocalizedDescriptionKey: "No se encontraron mutaciones en el schema"
-                    ])
+            .map { schema -> [GraphQLField] in
+                if let mutationType = schema.mutationType,
+                   let mutationTypeName = mutationType.name,
+                   let mutationType = schema.types.first(where: { $0.name == mutationTypeName }) {
+                    return mutationType.fields ?? []
                 }
-                return fields
+                return []
+            }
+            .eraseToAnyPublisher()
+    }
+    
+    /// Invalida la caché del esquema para forzar una recarga
+    func invalidateCache() {
+        cachedSchema = nil
+        print("🔄 Caché de schema GraphQL invalidada")
+    }
+    
+    /// Guarda el esquema en un archivo JSON para referencia
+    /// - Returns: Publisher que emite la URL del archivo guardado o un error
+    func saveSchemaToFile() -> AnyPublisher<URL, Error> {
+        return fetchSchema()
+            .tryMap { schema -> URL in
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+                let data = try encoder.encode(schema)
+                
+                let fileManager = FileManager.default
+                let docsDirectory = try fileManager.url(
+                    for: .documentDirectory,
+                    in: .userDomainMask,
+                    appropriateFor: nil,
+                    create: true
+                )
+                
+                let fileURL = docsDirectory.appendingPathComponent("graphql-schema.json")
+                try data.write(to: fileURL)
+                print("📄 Schema GraphQL guardado en: \(fileURL.path)")
+                return fileURL
             }
             .eraseToAnyPublisher()
     }

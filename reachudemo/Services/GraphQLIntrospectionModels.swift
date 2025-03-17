@@ -1,17 +1,17 @@
 import Foundation
 
 // Respuesta principal de una consulta de introspección
-struct IntrospectionResponse: Decodable {
+struct IntrospectionResponse: Codable {
     let data: SchemaData
 }
 
 // Datos del schema
-struct SchemaData: Decodable {
+struct SchemaData: Codable {
     let __schema: GraphQLSchema
 }
 
 // Estructura del schema completo
-struct GraphQLSchema: Decodable {
+struct GraphQLSchema: Codable {
     let queryType: TypeRef
     let mutationType: TypeRef?
     let subscriptionType: TypeRef?
@@ -20,16 +20,16 @@ struct GraphQLSchema: Decodable {
 }
 
 // Referencia a un tipo
-struct TypeRef: Decodable {
-    let name: String
+struct TypeRef: Codable {
+    let name: String?
     let fields: [GraphQLField]?
 }
 
 // Definición completa de un tipo GraphQL
-struct GraphQLType: Decodable, Identifiable {
-    var id: String { name }
+struct GraphQLType: Codable, Identifiable {
+    var id: String { name ?? "unknown" }
     
-    let name: String
+    let name: String?
     let kind: String
     let description: String?
     let fields: [GraphQLField]?
@@ -70,7 +70,7 @@ struct GraphQLType: Decodable, Identifiable {
 }
 
 // Campo de un tipo GraphQL - Convertido a class para evitar recursividad infinita
-class GraphQLField: Decodable, Identifiable {
+class GraphQLField: Codable, Identifiable {
     var id: String { name }
     
     let name: String
@@ -90,13 +90,23 @@ class GraphQLField: Decodable, Identifiable {
         deprecationReason = try container.decodeIfPresent(String.self, forKey: .deprecationReason)
     }
     
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encodeIfPresent(args, forKey: .args)
+        try container.encode(type, forKey: .type)
+        try container.encodeIfPresent(isDeprecated, forKey: .isDeprecated)
+        try container.encodeIfPresent(deprecationReason, forKey: .deprecationReason)
+    }
+    
     enum CodingKeys: String, CodingKey {
         case name, description, args, type, isDeprecated, deprecationReason
     }
 }
 
 // Campo de entrada (para argumentos) - Convertido a class para evitar recursividad infinita
-class GraphQLInputField: Decodable, Identifiable {
+class GraphQLInputField: Codable, Identifiable {
     var id: String { name }
     
     let name: String
@@ -112,13 +122,21 @@ class GraphQLInputField: Decodable, Identifiable {
         defaultValue = try container.decodeIfPresent(String.self, forKey: .defaultValue)
     }
     
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(name, forKey: .name)
+        try container.encodeIfPresent(description, forKey: .description)
+        try container.encode(type, forKey: .type)
+        try container.encodeIfPresent(defaultValue, forKey: .defaultValue)
+    }
+    
     enum CodingKeys: String, CodingKey {
         case name, description, type, defaultValue
     }
 }
 
 // Referencia a un tipo, puede ser anidada - Convertido a class para evitar recursividad infinita
-class GraphQLTypeRef: Decodable {
+class GraphQLTypeRef: Codable {
     let kind: String
     let name: String?
     let ofType: GraphQLTypeRef?
@@ -128,6 +146,13 @@ class GraphQLTypeRef: Decodable {
         kind = try container.decode(String.self, forKey: .kind)
         name = try container.decodeIfPresent(String.self, forKey: .name)
         ofType = try container.decodeIfPresent(GraphQLTypeRef.self, forKey: .ofType)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(kind, forKey: .kind)
+        try container.encodeIfPresent(name, forKey: .name)
+        try container.encodeIfPresent(ofType, forKey: .ofType)
     }
     
     enum CodingKeys: String, CodingKey {
@@ -148,7 +173,7 @@ class GraphQLTypeRef: Decodable {
 }
 
 // Valor de una enumeración
-struct GraphQLEnumValue: Decodable, Identifiable {
+struct GraphQLEnumValue: Codable, Identifiable {
     var id: String { name }
     
     let name: String
@@ -158,7 +183,7 @@ struct GraphQLEnumValue: Decodable, Identifiable {
 }
 
 // Directiva GraphQL
-struct GraphQLDirective: Decodable, Identifiable {
+struct GraphQLDirective: Codable, Identifiable {
     var id: String { name }
     
     let name: String
@@ -176,7 +201,7 @@ extension GraphQLSchema {
     
     // Obtiene todos los tipos objeto (no escalares, no entradas, etc.)
     var objectTypes: [GraphQLType] {
-        return types.filter { $0.isObject && !$0.name.starts(with: "__") }
+        return types.filter { $0.isObject && !($0.name?.starts(with: "__") ?? false) }
     }
     
     // Obtiene todos los tipos de entrada
@@ -196,12 +221,14 @@ extension GraphQLSchema {
     
     // Obtiene el tipo raíz para consultas
     var rootQueryType: GraphQLType? {
-        return findType(name: self.queryType.name)
+        guard let name = self.queryType.name else { return nil }
+        return findType(name: name)
     }
     
     // Obtiene el tipo raíz para mutaciones (si existe)
     var mutationRootType: GraphQLType? {
-        guard let mutationType = self.mutationType else { return nil }
-        return findType(name: mutationType.name)
+        guard let mutationType = self.mutationType, 
+              let name = mutationType.name else { return nil }
+        return findType(name: name)
     }
 }

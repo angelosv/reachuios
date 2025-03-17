@@ -55,7 +55,7 @@ class GraphQLIntrospectionUtil {
                         }
                     },
                     receiveValue: { types in
-                        let typeNames = types.map { $0.name }
+                        let typeNames = types.compactMap { $0.name }
                         promise(.success(typeNames))
                     }
                 )
@@ -66,7 +66,7 @@ class GraphQLIntrospectionUtil {
     /// Obtiene información detallada sobre un tipo
     /// - Parameter typeName: Nombre del tipo
     /// - Returns: Información del tipo
-    func getTypeInfo(_ typeName: String) -> Future<GraphQLType, Error> {
+    func getTypeInfo(_ typeName: String) -> Future<GraphQLType?, Error> {
         return Future { promise in
             self.service.getTypeInfo(typeName: typeName)
                 .sink(
@@ -100,7 +100,7 @@ class GraphQLIntrospectionUtil {
                     receiveValue: { type in
                         var query = "{\n"
                         
-                        if let fields = type.fields {
+                        if let type = type, let fields = type.fields {
                             for field in fields {
                                 query += "  \(field.name)"
                                 
