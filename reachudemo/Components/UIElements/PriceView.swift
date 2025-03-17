@@ -30,7 +30,7 @@ struct PriceView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(comparePrice)
                     .font(discountStyle ?? AppTheme.TextStyle.comparePrice)
-                    .foregroundColor(.gray)
+                    .foregroundColor(AppTheme.Colors.secondaryLabel)
                     .strikethrough()
                 
                 Text(formattedPrice)
@@ -68,10 +68,23 @@ extension PriceView {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        PriceView(price: "100", currency: "USD")
-        PriceView(price: "100", currency: "USD", comparePrice: "150")
-        PriceView(from: ReachuPrice(currency_code: "USD", amount: "75.99", compare_at: "99.99"))
+    Group {
+        VStack(spacing: 20) {
+            PriceView(price: "100", currency: "USD")
+            PriceView(price: "100", currency: "USD", comparePrice: "150")
+            PriceView(from: ReachuPrice(currency_code: "USD", amount: "75.99", compare_at: "99.99"))
+        }
+        .padding()
+        .previewDisplayName("Light Mode")
+        
+        VStack(spacing: 20) {
+            PriceView(price: "100", currency: "USD")
+            PriceView(price: "100", currency: "USD", comparePrice: "150")
+            PriceView(from: ReachuPrice(currency_code: "USD", amount: "75.99", compare_at: "99.99"))
+        }
+        .padding()
+        .background(AppTheme.Colors.background)
+        .environment(\.colorScheme, .dark)
+        .previewDisplayName("Dark Mode")
     }
-    .padding()
 } 

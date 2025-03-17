@@ -33,7 +33,7 @@ enum ActionButtonStyle: Equatable {
         case .outline:
             return AppTheme.primaryColor
         case .ghost:
-            return .primary
+            return AppTheme.Colors.label
         }
     }
     
@@ -183,14 +183,31 @@ extension ActionButton {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        ActionButton(title: "Comprar ahora", style: .primary, size: .large, isFullWidth: true) {}
-        ActionButton(title: "Agregar al carrito", style: .secondary) {}
-        ActionButton(title: "Ver detalles", style: .outline) {}
-        ActionButton(title: "Cancelar", style: .ghost) {}
-        ActionButton(title: "Eliminar", style: .destructive, size: .small) {}
-        ActionButton(title: "", style: .icon(systemName: "plus")) {}
-        ActionButton.iconButton(systemName: "cart.badge.plus") {}
+    Group {
+        VStack(spacing: 20) {
+            ActionButton(title: "Comprar ahora", style: .primary, size: .large, isFullWidth: true) {}
+            ActionButton(title: "Agregar al carrito", style: .secondary) {}
+            ActionButton(title: "Ver detalles", style: .outline) {}
+            ActionButton(title: "Cancelar", style: .ghost) {}
+            ActionButton(title: "Eliminar", style: .destructive, size: .small) {}
+            ActionButton(title: "", style: .icon(systemName: "plus")) {}
+            ActionButton.iconButton(systemName: "cart.badge.plus") {}
+        }
+        .padding()
+        .previewDisplayName("Light Mode")
+        
+        VStack(spacing: 20) {
+            ActionButton(title: "Comprar ahora", style: .primary, size: .large, isFullWidth: true) {}
+            ActionButton(title: "Agregar al carrito", style: .secondary) {}
+            ActionButton(title: "Ver detalles", style: .outline) {}
+            ActionButton(title: "Cancelar", style: .ghost) {}
+            ActionButton(title: "Eliminar", style: .destructive, size: .small) {}
+            ActionButton(title: "", style: .icon(systemName: "plus")) {}
+            ActionButton.iconButton(systemName: "cart.badge.plus") {}
+        }
+        .padding()
+        .background(AppTheme.Colors.background)
+        .environment(\.colorScheme, .dark)
+        .previewDisplayName("Dark Mode")
     }
-    .padding()
 } 

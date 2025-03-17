@@ -20,7 +20,7 @@ struct LoadingStateView: View {
             
             Text(message)
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.Colors.secondaryLabel)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, minHeight: 120)
@@ -44,12 +44,12 @@ struct ErrorStateView: View {
         VStack(spacing: AppTheme.Padding.medium) {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 40))
-                .foregroundColor(.orange)
+                .foregroundColor(AppTheme.Colors.warning)
                 .padding(.bottom, AppTheme.Padding.small)
             
             Text(message)
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.Colors.secondaryLabel)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             
@@ -97,16 +97,17 @@ struct EmptyStateView: View {
         VStack(spacing: AppTheme.Padding.standard) {
             Image(systemName: iconName)
                 .font(.system(size: 50))
-                .foregroundColor(.gray)
+                .foregroundColor(AppTheme.Colors.tertiaryLabel)
                 .padding(.bottom, AppTheme.Padding.small)
             
             Text(title)
                 .font(.headline)
                 .bold()
+                .foregroundColor(AppTheme.Colors.label)
             
             Text(message)
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundColor(AppTheme.Colors.secondaryLabel)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             
@@ -187,39 +188,82 @@ struct StateAwareView<Content: View>: View {
 }
 
 #Preview {
-    VStack(spacing: 20) {
-        LoadingStateView()
-            .background(Color.gray.opacity(0.1))
+    Group {
+        VStack(spacing: 20) {
+            LoadingStateView()
+                .background(AppTheme.Colors.secondaryBackground)
+                .cornerRadius(8)
+            
+            ErrorStateView(message: "No se pudo cargar los productos", action: {})
+                .background(AppTheme.Colors.secondaryBackground)
+                .cornerRadius(8)
+            
+            EmptyStateView(
+                title: "Carrito Vacío",
+                message: "Aún no has agregado productos a tu carrito",
+                iconName: "cart",
+                actionTitle: "Ir a Comprar",
+                action: {}
+            )
+            .background(AppTheme.Colors.secondaryBackground)
             .cornerRadius(8)
-        
-        ErrorStateView(message: "No se pudo cargar los productos", action: {})
-            .background(Color.gray.opacity(0.1))
+            
+            StateAwareView(
+                isLoading: false,
+                error: nil,
+                isEmpty: true,
+                emptyTitle: "Sin Favoritos",
+                emptyMessage: "No has marcado ningún producto como favorito",
+                emptyIconName: "heart",
+                emptyAction: {},
+                retryAction: {}
+            ) {
+                Text("Contenido normal")
+            }
+            .background(AppTheme.Colors.secondaryBackground)
             .cornerRadius(8)
-        
-        EmptyStateView(
-            title: "Carrito Vacío",
-            message: "Aún no has agregado productos a tu carrito",
-            iconName: "cart",
-            actionTitle: "Ir a Comprar",
-            action: {}
-        )
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
-        
-        StateAwareView(
-            isLoading: false,
-            error: nil,
-            isEmpty: true,
-            emptyTitle: "Sin Favoritos",
-            emptyMessage: "No has marcado ningún producto como favorito",
-            emptyIconName: "heart",
-            emptyAction: {},
-            retryAction: {}
-        ) {
-            Text("Contenido normal")
         }
-        .background(Color.gray.opacity(0.1))
-        .cornerRadius(8)
+        .padding()
+        .previewDisplayName("Light Mode")
+        
+        VStack(spacing: 20) {
+            LoadingStateView()
+                .background(AppTheme.Colors.secondaryBackground)
+                .cornerRadius(8)
+            
+            ErrorStateView(message: "No se pudo cargar los productos", action: {})
+                .background(AppTheme.Colors.secondaryBackground)
+                .cornerRadius(8)
+            
+            EmptyStateView(
+                title: "Carrito Vacío",
+                message: "Aún no has agregado productos a tu carrito",
+                iconName: "cart",
+                actionTitle: "Ir a Comprar",
+                action: {}
+            )
+            .background(AppTheme.Colors.secondaryBackground)
+            .cornerRadius(8)
+            
+            StateAwareView(
+                isLoading: false,
+                error: nil,
+                isEmpty: true,
+                emptyTitle: "Sin Favoritos",
+                emptyMessage: "No has marcado ningún producto como favorito",
+                emptyIconName: "heart",
+                emptyAction: {},
+                retryAction: {}
+            ) {
+                Text("Contenido normal")
+                    .foregroundColor(AppTheme.Colors.label)
+            }
+            .background(AppTheme.Colors.secondaryBackground)
+            .cornerRadius(8)
+        }
+        .padding()
+        .background(AppTheme.Colors.background)
+        .environment(\.colorScheme, .dark)
+        .previewDisplayName("Dark Mode")
     }
-    .padding()
 } 
