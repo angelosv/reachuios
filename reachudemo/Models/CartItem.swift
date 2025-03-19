@@ -9,7 +9,7 @@ struct CartItem: Identifiable {
     var color: String?
     
     var subtotal: Double {
-        if let amount = Double(product.price.amount) {
+        if let amount = Double(product.price.amount_incl_taxes) {
             return amount * Double(quantity)
         }
         return 0

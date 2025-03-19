@@ -106,7 +106,7 @@ struct ProductDetailModal: View {
                             .foregroundColor(primaryColor)
                         
                         // Original price (simulated)
-                        let originalPrice = (Double(product.price.amount) ?? 0) * 1.25
+                        let originalPrice = (Double(product.price.amount_incl_taxes) ?? 0) * 1.25
                         Text("\(product.price.currency_code) \(String(format: "%.0f", originalPrice))")
                             .font(.subheadline)
                             .foregroundColor(.gray)

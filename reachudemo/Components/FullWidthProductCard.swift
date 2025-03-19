@@ -112,12 +112,13 @@ struct FullWidthProductCard: View {
     let demoProduct = ReachuProduct(
         id: "1",
         images: [ReachuImage(url: "https://example.com/image.jpg", order: 0)],
-        price: ReachuPrice(currency_code: "USD", amount: "39.99", compare_at: "59.99"),
+        price: ReachuPrice(currency_code: "USD", amount_incl_taxes: "39.99", compare_at_incl_taxes: "59.99"),
         title: "Nordic Omega-3 Premium Fish Oil Supplement for Pregnancy",
-        description: "High-quality omega-3 supplement specially formulated for pregnant women, supporting brain and eye development in babies."
+        description: "High-quality omega-3 supplement specially formulated for pregnant women, supporting brain and eye development in babies.",
+        supplier: "Nordic Nutrition"
     )
     
-    return Group {
+    Group {
         FullWidthProductCard(
             product: demoProduct,
             onAddToCart: {},

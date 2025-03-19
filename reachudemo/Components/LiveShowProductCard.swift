@@ -93,12 +93,13 @@ struct LiveShowProductCard: View {
     let demoProduct = ReachuProduct(
         id: "1",
         images: [ReachuImage(url: "https://example.com/image.jpg", order: 0)],
-        price: ReachuPrice(currency_code: "NOK", amount: "299", compare_at: "499"),
+        price: ReachuPrice(currency_code: "NOK", amount_incl_taxes: "299", compare_at_incl_taxes: "499"),
         title: "Beauty Cream With Vitamin E and Hyaluronic Acid",
-        description: "Hydrating face cream with natural ingredients"
+        description: "Hydrating face cream with natural ingredients",
+        supplier: "Beauty Essentials"
     )
     
-    return Group {
+    Group {
         LiveShowProductCard(
             product: demoProduct,
             onAddToCart: {}

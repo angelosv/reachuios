@@ -90,12 +90,13 @@ struct FeaturedProductCard: View {
     let demoProduct = ReachuProduct(
         id: "1",
         images: [ReachuImage(url: "https://example.com/image.jpg", order: 0)],
-        price: ReachuPrice(currency_code: "Rp", amount: "150000"),
+        price: ReachuPrice(currency_code: "Rp", amount_incl_taxes: "150000"),
         title: "Demo Product",
-        description: "This is a demo product description"
+        description: "This is a demo product description",
+        supplier: "Demo Supplier"
     )
     
-    return Group {
+    Group {
         FeaturedProductCard(
             product: demoProduct,
             onTap: {},

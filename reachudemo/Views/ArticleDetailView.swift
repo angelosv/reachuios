@@ -286,6 +286,11 @@ struct ArticleDetailView: View {
     
     private func fetchProduct() {
         let service = ReachuGraphQLService()
+        print("🔍 Attempting to fetch product with ID: \(productId)")
+        
+        // Mostrar producto demo en el entretanto
+        isLoadingProduct = true
+        createDemoProduct()
         
         service.fetchProductById(productId: productId)
             .receive(on: DispatchQueue.main)
@@ -293,12 +298,17 @@ struct ArticleDetailView: View {
                 receiveCompletion: { completion in
                     isLoadingProduct = false
                     if case .failure(let error) = completion {
-                        print("Error fetching product: \(error)")
-                        createDemoProduct()
+                        print("❌ Error fetching product: \(error)")
+                        // No necesitamos llamar a createDemoProduct() aquí ya que lo hicimos arriba
                     }
                 },
                 receiveValue: { fetchedProduct in
-                    self.product = fetchedProduct
+                    isLoadingProduct = false
+                    print("✅ Successfully fetched product: \(fetchedProduct.id), title: \(fetchedProduct.title), supplier: \(fetchedProduct.supplier)")
+                    // Solo actualizar si es un producto real (no demo)
+                    if !fetchedProduct.id.starts(with: "demo-") {
+                        self.product = fetchedProduct
+                    }
                 }
             )
             .store(in: &cancellables)
@@ -306,6 +316,11 @@ struct ArticleDetailView: View {
     
     private func fetchRecommendedProduct() {
         let service = ReachuGraphQLService()
+        print("🔍 Attempting to fetch recommended product with ID: \(omegaProductId)")
+        
+        // Mostrar producto demo en el entretanto
+        isLoadingRecommended = true
+        createDemoRecommendedProduct()
         
         service.fetchProductById(productId: omegaProductId)
             .receive(on: DispatchQueue.main)
@@ -313,50 +328,64 @@ struct ArticleDetailView: View {
                 receiveCompletion: { completion in
                     isLoadingRecommended = false
                     if case .failure(let error) = completion {
-                        print("Error fetching recommended product: \(error)")
-                        createDemoRecommendedProduct()
+                        print("❌ Error fetching recommended product: \(error)")
+                        // No necesitamos llamar a createDemoRecommendedProduct() aquí ya que lo hicimos arriba
                     }
                 },
                 receiveValue: { fetchedProduct in
-                    self.recommendedProduct = fetchedProduct
+                    isLoadingRecommended = false
+                    print("✅ Successfully fetched recommended product: \(fetchedProduct.id), title: \(fetchedProduct.title), supplier: \(fetchedProduct.supplier)")
+                    // Solo actualizar si es un producto real (no demo)
+                    if !fetchedProduct.id.starts(with: "demo-") {
+                        self.recommendedProduct = fetchedProduct
+                    }
                 }
             )
             .store(in: &cancellables)
     }
     
     private func createDemoProduct() {
+        print("📦 Creating demo product with supplier: Healthy Life")
         // Create a demo product for the first section
         let demoProduct = ReachuProduct(
             id: "demo-1",
             images: [ReachuImage(url: "https://picsum.photos/200/200", order: 0)],
-            price: ReachuPrice(currency_code: "NOK", amount: "249", compare_at: "349"),
+            price: ReachuPrice(currency_code: "NOK", amount_incl_taxes: "249", compare_at_incl_taxes: "349"),
             title: "Multivitamin Daily Complex",
-            description: "Complete daily multivitamin formula with essential nutrients for overall health and wellbeing."
+            description: "Complete daily multivitamin formula with essential nutrients for overall health and wellbeing.",
+            supplier: "Healthy Life"
         )
+        print("✅ Demo product created: \(demoProduct.id), title: \(demoProduct.title), supplier: \(demoProduct.supplier)")
         self.product = demoProduct
     }
     
     private func createDemoRecommendedProduct() {
+        print("📦 Creating demo recommended product with supplier: Mother's Choice")
         // Create a demo product for the recommended section (not specific to Omega-3)
         let demoProduct = ReachuProduct(
             id: "demo-2",
             images: [ReachuImage(url: "https://picsum.photos/400/400", order: 0)],
-            price: ReachuPrice(currency_code: "NOK", amount: "399", compare_at: "599"),
+            price: ReachuPrice(currency_code: "NOK", amount_incl_taxes: "399", compare_at_incl_taxes: "599"),
             title: "Premium Prenatal Multivitamin Complex",
-            description: "Specially formulated prenatal multivitamin with essential nutrients for maternal health and baby development during pregnancy."
+            description: "Specially formulated prenatal multivitamin with essential nutrients for maternal health and baby development during pregnancy.",
+            supplier: "Mother's Choice"
         )
+        print("✅ Demo recommended product created: \(demoProduct.id), title: \(demoProduct.title), supplier: \(demoProduct.supplier)")
         self.recommendedProduct = demoProduct
     }
     
     private func createDemoOmega3Product() {
+        print("📦 Creating demo Omega-3 product with supplier: Nordic Essentials")
         // Create a demo product related to Omega-3 (keeping this for backward compatibility)
         let demoProduct = ReachuProduct(
             id: "omega3-1",
             images: [ReachuImage(url: "https://picsum.photos/400/400", order: 0)],
-            price: ReachuPrice(currency_code: "USD", amount: "39.99", compare_at: "59.99"),
+            price: ReachuPrice(currency_code: "USD", amount_incl_taxes: "39.99", compare_at_incl_taxes: "59.99"),
             title: "Nordic Omega-3 Premium Fish Oil Supplement",
-            description: "High-quality omega-3 supplement specially formulated for pregnant women. Supports brain and eye development in babies."
+            description: "High-quality omega-3 supplement specially formulated for pregnant women. Supports brain and eye development in babies.",
+            supplier: "Nordic Essentials"
         )
+        print("✅ Demo Omega-3 product created: \(demoProduct.id), title: \(demoProduct.title), supplier: \(demoProduct.supplier)")
         self.recommendedProduct = demoProduct
     }
     

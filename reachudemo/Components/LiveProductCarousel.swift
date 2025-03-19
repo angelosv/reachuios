@@ -133,27 +133,30 @@ struct LiveProductCarousel: View {
         ReachuProduct(
             id: "1",
             images: [ReachuImage(url: "https://picsum.photos/200", order: 0)],
-            price: ReachuPrice(currency_code: "NOK", amount: "299", compare_at: "499"),
+            price: ReachuPrice(currency_code: "NOK", amount_incl_taxes: "299", compare_at_incl_taxes: "499"),
             title: "Vitamin C Serum",
-            description: "Brightening serum for all skin types"
+            description: "Brightening serum for all skin types",
+            supplier: "Beauty Lab"
         ),
         ReachuProduct(
             id: "2",
             images: [ReachuImage(url: "https://picsum.photos/201", order: 0)],
-            price: ReachuPrice(currency_code: "NOK", amount: "349", compare_at: "599"),
+            price: ReachuPrice(currency_code: "NOK", amount_incl_taxes: "349", compare_at_incl_taxes: "599"),
             title: "Hyaluronic Acid Moisturizer",
-            description: "Deep hydration for dry skin"
+            description: "Deep hydration for dry skin",
+            supplier: "DermaCare"
         ),
         ReachuProduct(
             id: "3",
             images: [ReachuImage(url: "https://picsum.photos/202", order: 0)],
-            price: ReachuPrice(currency_code: "NOK", amount: "199", compare_at: "299"),
+            price: ReachuPrice(currency_code: "NOK", amount_incl_taxes: "199", compare_at_incl_taxes: "299"),
             title: "Niacinamide Serum",
-            description: "Reduces pores and improves skin texture"
+            description: "Reduces pores and improves skin texture",
+            supplier: "SkinCeuticals"
         )
     ]
     
-    return ZStack {
+    ZStack {
         Color.black.edgesIgnoringSafeArea(.all)
         LiveProductCarousel(
             products: products,
